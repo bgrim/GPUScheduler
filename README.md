@@ -1,4 +1,0 @@
-GPUScheduler
-============
-
-GPUScheduler
