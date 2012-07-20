@@ -4,8 +4,10 @@
 #define MinQueueSize (5)
 
 struct JobDescription{
-
-
+  int JobType;
+  int JobID;
+  void* params;
+  int numThreads;
 };
 
 typedef QueueJobs *QueueJobsRecord;

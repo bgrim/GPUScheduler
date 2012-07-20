@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 #include <pthread.h>
 
-#include "Kernels/SuperKernel.cu"
+#include "SuperKernel.cu"
 #include "Queues/QueueJobs.cu"
 #include "Queues/QueueResults.cu"
 #include "IncomingJobsManager.c"
