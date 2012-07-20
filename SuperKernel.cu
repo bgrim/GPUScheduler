@@ -34,7 +34,8 @@ __global__ void superKernel(QueueJobs incoming, QueueResults results)
 
 JobResults executeJob(JobDescription currentJob){
   // set the jobID
-  int JobID = JobID->currentJob;
+  // int JobID = JobID->currentJob;
+  int JobID = currentJob->JobID;
 
   // large switch
   switch(JobID){
