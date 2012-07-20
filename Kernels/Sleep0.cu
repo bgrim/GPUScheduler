@@ -34,7 +34,7 @@ void *sleep_setup(cudaStream_t stream, char *filename)
     return (void *) kernel_time;
 }
 
-void sleep(cudaStream_t stream, void *setupResult)
+void sleep0(cudaStream_t stream, void *setupResult)
 {
     //get the kernel time
     int *kernel_time = (int *) setupResult;
