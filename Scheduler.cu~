@@ -40,10 +40,9 @@ int main(int argc, char **argv)
   cudaStreamCreate(&stream_dataIn);
   cudaStreamCreate(&stream_dataOut);
 
-  QueueJobs d_newJobs = createQueue(128); //FIX, make this use stream_dataIn
+  Queue d_newJobs = createQueue(128); //FIX, make this use stream_dataIn
 
-  QueueResults d_finishedJobs = createQueue(128); //FIX, make this use stream_dataOut
-
+  Queue d_finishedJobs = createQueue(128); //FIX, make this use stream_dataOut
 
 
 //Launch the super kernel
