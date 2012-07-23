@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include <pthread.h>
+//#include "Queues/QueueJobs.cu"
 
-#include "Kernels/SuperKernel.cu"
-#include "Queues/QueueJobs.cu"
-#include "Queues/QueueResults.cu"
-
+void *main_ResultsManager(void *params);
 
 pthread_t start_ResultsManager(Queue CompletedJobDescriptions)
 {
@@ -13,8 +11,10 @@ pthread_t start_ResultsManager(Queue CompletedJobDescriptions)
 //  need and then launch a thread running main_ResultsManager,
 //  returning this thread
 
-  pthread_t thread1;
-  pthread_create( &thread1, NULL, main_IncomingJobsManager, (void*) CompletedJobDescriptions);
+  pthread_t thread2;
+  pthread_create( &thread2, NULL, main_ResultsManager, (void*) CompletedJobDescriptions);
+
+  return thread2;
 }
 
 
@@ -24,15 +24,17 @@ void *main_ResultsManager(void *params)
 //  print something about them to the screen.
 //    --eventually this should return the result to the application
 //      that requested the work.
- 
-  int HC_jobs =64;
+  printf("ResultsManager has started\n"); 
+  int HC_jobs = 1;
   int i;
   JobDescription currentJob;
-  results = (Queue)params;
+  Queue results = (Queue)params;
   
   for(i=0;i<HC_jobs;i++){
     // front and dequeue results
-    currentJob = FrontAndDeqeueResults(results);
-    printf("Job with ID # %d finished.", currentJob->JobID);
+    printf("Starting Dequeuing\n");
+    currentJob = FrontAndDequeueResult(results);
+    printf("Job with ID # %d finished\n", currentJob.JobID);
   }
+  return 0;
 }

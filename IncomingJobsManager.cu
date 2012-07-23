@@ -2,9 +2,8 @@
 #include <cuda_runtime.h>
 #include <pthread.h>
 
-#include "Queues/QueueJobs.cu"
-#include "Queues/QueueResults.cu"
-
+//#include "Queues/QueueJobs.cu"
+void *main_IncomingJobsManager(void *p);
 
 pthread_t start_IncomingJobsManager(Queue d_newJobs)
 {
@@ -14,6 +13,7 @@ pthread_t start_IncomingJobsManager(Queue d_newJobs)
 
   pthread_t thread1;
   pthread_create( &thread1, NULL, main_IncomingJobsManager, (void*) d_newJobs);
+  return thread1;
 }
 
 
@@ -30,8 +30,8 @@ void *main_IncomingJobsManager(void *p)
   int HC_JobType = 0; // hard code the job type for sleeps
   int HC_JobID;
   void* HC_params;
-  int HC_numThreads = 32;
-  int HC_jobs = 64;
+  int HC_numThreads = 1;
+  int HC_jobs = 1;
 
   int size = sizeof(struct JobDescription);
 
@@ -40,7 +40,7 @@ void *main_IncomingJobsManager(void *p)
     HC_JobID = i;
     // launch queue jobs
     // malloc the host structure
-    JobDescription h_JobDescription = malloc(size);
+    JobDescription *h_JobDescription = (JobDescription *) malloc(size);
 
     // set the values to the host structure
     h_JobDescription->JobType = HC_JobType;
@@ -48,20 +48,24 @@ void *main_IncomingJobsManager(void *p)
     h_JobDescription->params = HC_params;
     h_JobDescription->numThreads = HC_numThreads;
 
-    JobDescription d_JobDescription;
-
-
+    JobDescription *d_JobDescription;
 
     // cuda Malloc for the structure
-    cudaMalloc(&d_JobDescription, size);
+    cudaError_t e = cudaMalloc((void **) &d_JobDescription, size);
+    printf("CUDA ERROR: %s\n", cudaGetErrorString(e));
 
     // cuda mem copy
-    cudaMemcpy(&d_JobDescription, &h_JobDescription, size, cudaMemcpyHostToDevice); // maybe we can test this later with async
+    cudaMemcpy(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice); // maybe we can test this later with async
 
+
+    printf("Starting Enqueuing job # %d\n", HC_JobID);
     // enqueue jobs
-    EnqueueJob(d_JobDescription, d_newJobs);
+    EnqueueJob(*d_JobDescription, d_newJobs);
+
+    printf("Finished Enqueuing job # %d\n", HC_JobID);
 
     // free the local memory
     free(h_JobDescription);
   }
+  return 0;
 }

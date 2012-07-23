@@ -2,12 +2,10 @@
 #include <cuda_runtime.h>
 #include <pthread.h>
 
-#include "SuperKernel.cu"
 #include "Queues/QueueJobs.cu"
-#include "Queues/QueueResults.cu"
-#include "IncomingJobsManager.c"
-#include "ResultsManager.c"
-
+#include "IncomingJobsManager.cu"
+#include "ResultsManager.cu"
+#include "SuperKernel.cu"
 
 ////////////////////////////////////////////////////////////////////
 // The Main
@@ -35,32 +33,34 @@ int main(int argc, char **argv)
        QueueResults: The Super Kernel will Enqueue jobResults
                      The Scheduler will Dequeue them and send results to its caller
   */
-  cudaStream_t stream_kernel, stream_dataIn, stream_dataOut;
+  cudaStream_t stream_kernel;
+  //cudaStream_t stream_kernel, stream_dataIn, stream_dataOut;
   cudaStreamCreate(&stream_kernel);
-  cudaStreamCreate(&stream_dataIn);
-  cudaStreamCreate(&stream_dataOut);
+  //cudaStreamCreate(&stream_dataIn);
+  //cudaStreamCreate(&stream_dataOut);
 
-  Queue d_newJobs = createQueue(128); //FIX, make this use stream_dataIn
+  Queue d_newJobs = CreateQueue(128); //FIX, make this use stream_dataIn
 
-  Queue d_finishedJobs = createQueue(128); //FIX, make this use stream_dataOut
+  Queue d_finishedJobs = CreateQueue(128); //FIX, make this use stream_dataOut
 
 
 //Launch the super kernel
   superKernel<<< grid, threads, 0, stream_kernel>>>(d_newJobs, d_finishedJobs);
 
 //Launch a host thread to manage incoming jobs
-  pthread_t IncomingJobManager = start_IncomingJobManager(d_newJobs);
+  pthread_t IncomingJobManager = start_IncomingJobsManager(d_newJobs);
 
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
 //wait for the managers to finish (they should never finish)
-  pthread_join(IncomingJobManager);
-  pthread_join(ResultsManager);
+  void ** r;
+  pthread_join(IncomingJobManager, r);
+  pthread_join(ResultsManager, r);
 
-  cudaStreamDestroy(&stream_kernel);
-  cudaStreamDestroy(&stream_DataIn);
-  cudaStreamDestroy(&stream_DataOut);
+  cudaStreamDestroy(stream_kernel);
+  //cudaStreamDestroy(stream_DataIn);
+  //cudaStreamDestroy(stream_DataOut);
 
   DisposeQueue(d_newJobs);
   DisposeQueue(d_finishedJobs);
