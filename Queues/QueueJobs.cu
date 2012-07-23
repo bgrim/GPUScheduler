@@ -7,18 +7,19 @@
 
 void EnqueueJob(JobDescription X, Queue Q) {
 //called by CPU
-    int copySize= sizeof(struct QueueJobsRecord)-2*sizeof(int);
+  int copySize= sizeof(struct QueueJobsRecord)-12;
 
-    Queue h_Q;
-    cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  Queue h_Q = (Queue) malloc(sizeof(struct QueueJobsRecord));
+  cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
 
-    while(h_IsFull(h_Q)) cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  while(h_IsFull(h_Q)) cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
 
-    h_Q->Size++;
-    h_Q->Rear = (Q->Rear+1)%(Q->Capacity);
-    h_Q->Array[Q->Rear] = X;
+  h_Q->Size++;
+  h_Q->Rear = (Q->Rear+1)%(Q->Capacity);
+  h_Q->Array[Q->Rear] = X;
 
-    cudaMemcpy(Q, h_Q, copySize, cudaMemcpyHostToDevice);
+  cudaMemcpy(Q, h_Q, copySize, cudaMemcpyHostToDevice);
+  free(h_Q);
 }
 
 __device__ JobDescription FrontJob(Queue Q) {
