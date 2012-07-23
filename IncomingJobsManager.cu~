@@ -2,12 +2,11 @@
 #include <cuda_runtime.h>
 #include <pthread.h>
 
-#include "Kernels/SuperKernel.cu"
 #include "Queues/QueueJobs.cu"
 #include "Queues/QueueResults.cu"
 
 
-pthread_t start_IncomingJobsManager(QueueJobs d_newJobs)
+pthread_t start_IncomingJobsManager(Queue d_newJobs)
 {
 //This should do any initializing that the incoming jobs
 //  manager will need and then launch a thread running
@@ -18,12 +17,14 @@ pthread_t start_IncomingJobsManager(QueueJobs d_newJobs)
 }
 
 
-void *main_IncomingJobsManager(void *params)
+void *main_IncomingJobsManager(void *p)
 {
 //The thread should get job descriptions some how and Enqueue them
 //  into the queue in params
 //    --eventually this should get jobs from an external application
 //      but will probably just be hardcoded at first or a parameter
+
+  Queue d_newJobs = (Queue) p;
 
   // Hard code for testing
   int HC_JobType = 0; // hard code the job type for sleeps
