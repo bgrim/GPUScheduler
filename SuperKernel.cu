@@ -32,13 +32,13 @@ __global__ void superKernel(QueueJobs incoming, QueueResults results)
     }
 }
 
-JobResults executeJob(JobDescription currentJob){
+__device__ JobResults executeJob(JobDescription currentJob){
   // set the jobID
   // int JobID = JobID->currentJob;
-  int JobID = currentJob->JobID;
+  int JobType = currentJob->JobType;
 
   // large switch
-  switch(JobID){
+  switch(JobType){
   case 0:
     // call case 0
     sleep0();

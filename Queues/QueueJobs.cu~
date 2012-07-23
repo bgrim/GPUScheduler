@@ -69,7 +69,7 @@ void EnqueueJob(JobDescription X, QueueJobs Q) {
 //called by CPU
     QueueJobs h_Q;
 
-    while(IsFullJob(Q, h_Q));  //wait for queue to be non-full
+    while(IsFullJob(Q, ));  //wait for queue to be non-full
 
     Q->Size++;
     Q->Rear = (Q->Rear+1)%(Q->Capacity);
