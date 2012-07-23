@@ -40,6 +40,7 @@ int main(int argc, char **argv)
   cudaStreamCreate(&stream_dataIn);
   cudaStreamCreate(&stream_dataOut);
 
+  // create queues
   QueueJobs    d_newJobs;
   createQueueJobs(d_newJobs, stream_dataIn);
 
