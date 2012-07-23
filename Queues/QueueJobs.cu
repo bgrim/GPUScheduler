@@ -3,6 +3,10 @@
 
 #define MinQueueSize (5)
 
+
+////////////////////////////////////////////////////////////
+// Types
+////////////////////////////////////////////////////////////
 struct JobDescription{
   int JobType;
   int JobID;
@@ -10,17 +14,29 @@ struct JobDescription{
   int numThreads;
 };
 
-struct QueueJobsRecord {
+struct QueueJobsRecord {  //order is important in this record
   int Capacity;
   int Front;
   int Rear;
-  int Size;
   JobDescription *Array;
+  int Size;
+  bool ReadLock;  //FIX
 };
-
 typedef QueueJobs *QueueJobsRecord;
 
 
+////////////////////////////////////////////////////////////
+// Helpers
+////////////////////////////////////////////////////////////
+__device__ void getLock(QueueJobs Q)
+{
+  while(atomicCAS(&(Q->ReadLock), 0, 1) != 0);
+}
+
+__device__ void releaseLock(QueueJobs Q)
+{
+  atomicExch(&(Q->ReadLock),0);
+}
 
 __device__ int IsEmptyJob(QueueJobs Q) {
 //called by GPU
@@ -32,7 +48,12 @@ int IsFullJob(QueueJobs Q) {
   return Q->Size == Q->Capacity;
 }
 
-QueueJobs CreateQueueJobs(int MaxElements) {
+
+////////////////////////////////////////////////////////////
+// Constructor and Deconsturctor
+////////////////////////////////////////////////////////////
+
+QueueJobs CreateQueueJobs(int MaxElements) {  //FIX
   QueueJobs Q;
 
   if (MaxElements < MinQueueSize) {
@@ -65,51 +86,66 @@ void DisposeQueueJobs(QueueJobs Q) {
 }
 
 
-void EnqueueJob(JobDescription X, QueueJobs Q) {
+////////////////////////////////////////////////////////////
+// Functions to modify a queue
+////////////////////////////////////////////////////////////
+
+void EnqueueJob(JobDescription X, QueueJobs Q) {  //make this not copy the ReadLock
 //called by CPU
     QueueJobs h_Q;
+    cudaMemcpy(Q, h_Q, );  //FIX
 
-    while(IsFullJob(Q, h_Q));  //wait for queue to be non-full
+    while(IsFullJob(h_Q)) cudaMemcpy(Q, h_Q, ); //FIX
 
-    Q->Size++;
-    Q->Rear = (Q->Rear+1)%(Q->Capacity);
-    Q->Array[Q->Rear] = X;
+    h_Q->Size++;
+    h_Q->Rear = (Q->Rear+1)%(Q->Capacity);
+    h_Q->Array[Q->Rear] = X;
+
+    cudaMemcpy(Q, h_Q, ); //FIX
 }
 
 __device__ JobDescription FrontJob(QueueJobs Q) {
 //called by GPU
-  if (!IsEmptyJob(Q)) {
-    return Q->Array[Q->Front];
-  }
-  Error("Front Error: The queue is empty.");
+  getLock(Q);
 
-  /* Return value to avoid warnings from the compiler */
-  void *r;
-  return r;
+  while(IsEmptyJob(Q)); //wait for a job
+
+  JobDescription result = Q->Array[Q->Front];
+  releaseLock(Q);
+  return result;
+
 }
 
 __device__ void DequeueJob(QueueJobs Q) {
 //called by GPU
-  if (IsEmptyJob(Q)) {
-    Error("Dequeue Error: The queue is empty.");
-  } else {
-    Q->Size--;
-    Q->Front = (Q->Front+1)%(Q->Capacity);
-  }
+  getLock(Q);
 
+  while(IsEmptyJob(Q)); //wait for a job
+  Q->Size--;
+  Q->Front = (Q->Front+1)%(Q->Capacity);
+
+  releaseLock(Q);
 }
 
 __device__ JobDescription FrontAndDequeueJob(QueueJobs Q) {
 //called by GPU
+  getLock(Q);
+
+  while(IsEmptyJob(Q)); //wait for a job
+
   JobDescription X;
+  Q->Size--;
+  X = Q->Array[Q->Front];
+  Q->Front = (Q->Front+1)%(Q->Capacity);
 
-  if (IsEmptyJob(Q)) {
-    Error("FrontAndDequeue Error: The queue is empty.");
-  } else {
-    Q->Size--;
-    X = Q->Array[Q->Front];
-    Q->Front = (Q->Front+1)%(Q->Capacity);
-  }
+  releaseLock(Q);
+
   return X;
-
 }
+
+
+
+
+
+
+
