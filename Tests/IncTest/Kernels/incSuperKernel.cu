@@ -23,16 +23,16 @@ __global__ void superKernel(int *init, int numThreads,int *result)
 
     int threadID = (threadIdx.x + threadIdx.y * blockDim.x)%warp_size;
     int warpID = (threadIdx.x + threadIdx.y * blockDim.x)/warp_size;
+    
+    //clock_block(10,156000);
 
-    while(init[0]!=0);
+    while(init[0]==0) clock_block(1,1);
 
-    if(threadID<numThreads && warpID==0) result[threadID+1] = init[threadID+1]+1;
+    if(threadID<numThreads && warpID==0) result[threadID+1] = init[0];
 
-    //clock_block(100,20000000);
+    //__syncthreads(); //this will need to be a warp wide sync using (PTX barriers)
 
-    __syncthreads(); //this will need to be a warp wide sync using (PTX barriers)
-
-    if(threadID==0) result[0] = 0;
+    if(threadID==0) result[0] = 7;
 }
 
 

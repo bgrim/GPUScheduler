@@ -10,7 +10,12 @@
 // Global Variables
 /////////////////////////////////////////////////////////////////
 
-
+void printAnyErrors()
+{
+  cudaError_t e = cudaGetLastError();
+  printf("CUDA error:  %s", cudaGetErrorString(e));
+  
+}
 
 ////////////////////////////////////////////////////////////////////
 // The Main
@@ -35,35 +40,60 @@ int main(int argc, char **argv)
   int* d_result;
   cudaMalloc(&d_result, (size+1)*sizeof(int));
 
-  h_init[0]=1;  //set the data ready flag to false
-  cudaMemcpy(d_init, h_init, sizeof(int), cudaMemcpyHostToDevice);
+  h_init[0]=0;  //set the data ready flag to false
+  cudaMemcpyAsync(d_init, h_init, sizeof(int), cudaMemcpyHostToDevice,stream_dataIn);
+  cudaStreamSynchronize(stream_dataIn);
 
-  h_result[0]=1;  //set the data ready flag to false
-  cudaMemcpy(d_result, h_result, sizeof(int), cudaMemcpyHostToDevice);
+  h_result[0]=0;  //set the data ready flag to false
+  cudaMemcpyAsync(d_result, h_result, sizeof(int), cudaMemcpyHostToDevice,stream_dataOut);
+  cudaStreamSynchronize(stream_dataOut);
 
   dim3 threads(32, 1);
   dim3 grid(1, 1);
 
   printf("launching SuperKernel\n");
 
-  // call the cudaMatrixMul cuda function
+// call the cudaMatrixMul cuda function
   superKernel<<< grid, threads, 0, stream_kernel>>>(d_init, size, d_result);
 
+//PRINT HERE
+  printAnyErrors();
+
+//Make inputs and transfer them
   int j;
-  for(j=0;j<size;j++)h_init[j+1] = j;
+  for(j=1;j<size+1;j++)h_init[j] = j;
 
-  cudaMemcpy(&d_init[1], &h_init[1], size*sizeof(int), cudaMemcpyHostToDevice);
+  printf("launching cudaMemcpy Data\n");
 
-  h_init[0]=0;
-  cudaMemcpy(d_init, h_init, sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(&d_init[1], &h_init[1], size*sizeof(int), cudaMemcpyHostToDevice, stream_dataIn);
+  cudaStreamSynchronize(stream_dataIn); 
 
-  int done = 1;
-  while(done!=0) { cudaMemcpy(&done, d_result, sizeof(int), cudaMemcpyDeviceToHost); printf("got value done: %d\n", done); }
+//PRINT HERE
+  printAnyErrors();
 
-  cudaMemcpy(&h_result[1], &d_result[1], size*sizeof(int), cudaMemcpyDeviceToHost);
+//Mark flag as ready
+  printf("launching cudaMemcpy Flag\n");
 
+  h_init[0]=7;
+  cudaMemcpyAsync(d_init, h_init, sizeof(int), cudaMemcpyHostToDevice,stream_dataIn);
+  cudaStreamSynchronize(stream_dataIn);
+ 
+
+//wait for result flag to be on
+  while(h_result[0]==0) { cudaMemcpyAsync(h_result, d_result, sizeof(int), cudaMemcpyDeviceToHost, stream_dataOut); 
+                          cudaStreamSynchronize(stream_dataOut); 
+                          printf("got value h_result[0]:  %d\n", h_result[0]); }
+//PRINT HERE
+  printAnyErrors();
+
+//Get and print results
+  cudaMemcpyAsync(&h_result[1], &d_result[1], size*sizeof(int), cudaMemcpyDeviceToHost, stream_dataOut);
+  cudaStreamSynchronize(stream_dataOut); 
   int i;
   for(i=0; i<size; i++) printf("intial value: %d\t final value: %d\n", h_init[i+1], h_result[i+1]);
+
+//PRINT HERE
+  printAnyErrors();
 
   return 0;    
 }
