@@ -2,7 +2,7 @@
 //#include "Queues/QueueJobs.cu"
 #include "Kernels/Sleep0.cu"
 
-__device__ JobDescription executeJob(JobDescription currentJob);
+__device__ JobDescription *executeJob(JobDescription *currentJob);
 
 __global__ void superKernel(Queue incoming, Queue results)
 { 
@@ -17,14 +17,14 @@ __global__ void superKernel(Queue incoming, Queue results)
 
     while(true)
     {
-      JobDescription currentJob;
+      JobDescription *currentJob;
 
       if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
 
       __syncthreads(); //see below comment
 
-      JobDescription retval;
-      if(threadID<currentJob.numThreads) retval = executeJob(currentJob);
+      JobDescription *retval;
+      if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
 
       __syncthreads(); //this will need to be a warp wide sync using (PTX barriers)
 
@@ -32,9 +32,9 @@ __global__ void superKernel(Queue incoming, Queue results)
     }
 }
 
-__device__ JobDescription executeJob(JobDescription currentJob){
+__device__ JobDescription *executeJob(JobDescription *currentJob){
 
-  int JobType = currentJob.JobType;
+  int JobType = currentJob->JobType;
 
   int SleepTime = 1;
   int clockRate = 706000000;
@@ -45,6 +45,6 @@ __device__ JobDescription executeJob(JobDescription currentJob){
     // call case 0
     sleep0(SleepTime, clockRate);
   }
-return currentJob;
+  return currentJob;
 }
 

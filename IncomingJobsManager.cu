@@ -51,16 +51,16 @@ void *main_IncomingJobsManager(void *p)
     JobDescription *d_JobDescription;
 
     // cuda Malloc for the structure
-    cudaError_t e = cudaMalloc((void **) &d_JobDescription, size);
-    printf("CUDA ERROR: %s\n", cudaGetErrorString(e));
+    cudaError_t e1 = cudaMalloc((void **) &d_JobDescription, size);
+    printf("CUDA ERROR in Enqueue cudaMalloc: %s\n", cudaGetErrorString(e1));
 
     // cuda mem copy
-    cudaMemcpy(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice); // maybe we can test this later with async
-
+    cudaError_t e2 = cudaMemcpy(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice); // maybe we can test this later with async
+    printf("CUDA ERROR in Enqueue in cudaMemcpy: %s\n", cudaGetErrorString(e2));
 
     printf("Starting Enqueuing job # %d\n", HC_JobID);
     // enqueue jobs
-    EnqueueJob(*d_JobDescription, d_newJobs);
+    EnqueueJob(d_JobDescription, d_newJobs);
 
     printf("Finished Enqueuing job # %d\n", HC_JobID);
 

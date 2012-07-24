@@ -9,7 +9,7 @@ struct JobDescription{
 };
 
 struct QueueRecord {
-  JobDescription *Array;
+  JobDescription **Array;
   int Capacity;
   int Rear;
   int Size;
@@ -65,7 +65,7 @@ Queue CreateQueue(int MaxElements) {
   //FatalError("CreateQueueJobs Error: Unable to allocate more memory.");
   //}
 
-  cudaMalloc(&(Q->Array), sizeof(JobDescription)*MaxElements);
+  cudaMalloc((void **)&(Q->Array), sizeof(JobDescription*)*MaxElements);
 
   Q->Capacity = MaxElements;
   Q->Size = 0;
@@ -91,7 +91,7 @@ void DisposeQueue(Queue Q) {
 // Functions to modify a new jobs queue
 ////////////////////////////////////////////////////////////
 
-void EnqueueJob(JobDescription X, Queue Q) {
+void EnqueueJob(JobDescription *X, Queue Q) {
 //called by CPU
   printf("Start of EnqueueJob\n");
 
@@ -114,13 +114,13 @@ void EnqueueJob(JobDescription X, Queue Q) {
   free(h_Q);
 }
 
-__device__ JobDescription FrontJob(Queue Q) {
+__device__ JobDescription *FrontJob(Queue Q) {
 //called by GPU
   getLock(Q);
 
   while(d_IsEmpty(Q)); //wait for a job
 
-  JobDescription result = Q->Array[Q->Front];
+  JobDescription *result = Q->Array[Q->Front];
   releaseLock(Q);
   return result;
 
@@ -137,14 +137,14 @@ __device__ void DequeueJob(Queue Q) {
   releaseLock(Q);
 }
 
-__device__ JobDescription FrontAndDequeueJob(Queue Q) {
+__device__ JobDescription *FrontAndDequeueJob(Queue Q) {
 //called by GPU
   getLock(Q);
 
   while(d_IsEmpty(Q)); //wait for a job
 
   Q->Size--;
-  JobDescription result = Q->Array[Q->Front];
+  JobDescription *result = Q->Array[Q->Front];
   Q->Front = (Q->Front+1)%(Q->Capacity);
 
   releaseLock(Q);
@@ -152,7 +152,7 @@ __device__ JobDescription FrontAndDequeueJob(Queue Q) {
   return result;
 }
 
-__device__ void EnqueueResult(JobDescription X, Queue Q) {
+__device__ void EnqueueResult(JobDescription *X, Queue Q) {
 //called by GPU
   getLock(Q);
 
@@ -165,7 +165,7 @@ __device__ void EnqueueResult(JobDescription X, Queue Q) {
   releaseLock(Q);
 }
 
-JobDescription FrontResult(Queue Q) {
+JobDescription *FrontResult(Queue Q) {
 //called by CPU
   int copySize= sizeof(struct QueueRecord)-12;
 
@@ -192,7 +192,7 @@ void DequeueResult(Queue Q) {
   cudaMemcpy(Q, h_Q, copySize, cudaMemcpyHostToDevice);
 }
 
-JobDescription FrontAndDequeueResult(Queue Q) {
+JobDescription *FrontAndDequeueResult(Queue Q) {
 //called by CPU
   int copySize= sizeof(struct QueueRecord)-12;
 
@@ -201,9 +201,8 @@ JobDescription FrontAndDequeueResult(Queue Q) {
 
   while(h_IsEmpty(h_Q)) cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
 
-  JobDescription result;
   h_Q->Size--;
-  result = h_Q->Array[h_Q->Front];
+  JobDescription *result = h_Q->Array[h_Q->Front];
   h_Q->Front = (h_Q->Front+1)%(h_Q->Capacity);
 
   cudaMemcpy(Q, h_Q, copySize, cudaMemcpyHostToDevice);

@@ -27,14 +27,14 @@ void *main_ResultsManager(void *params)
   printf("ResultsManager has started\n"); 
   int HC_jobs = 1;
   int i;
-  JobDescription currentJob;
+  JobDescription *currentJob;
   Queue results = (Queue)params;
   
   for(i=0;i<HC_jobs;i++){
     // front and dequeue results
     printf("Starting Dequeuing\n");
     currentJob = FrontAndDequeueResult(results);
-    printf("Job with ID # %d finished\n", currentJob.JobID);
+    printf("Job with ID # %d finished\n", currentJob->JobID);
   }
   return 0;
 }
