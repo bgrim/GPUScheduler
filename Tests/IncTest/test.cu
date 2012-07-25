@@ -13,7 +13,7 @@
 void printAnyErrors()
 {
   cudaError_t e = cudaGetLastError();
-  printf("CUDA error:  %s", cudaGetErrorString(e));
+  printf("CUDA error:  %s \n", cudaGetErrorString(e));
   
 }
 

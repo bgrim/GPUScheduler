@@ -24,9 +24,9 @@ __global__ void superKernel(int *init, int numThreads,int *result)
     int threadID = (threadIdx.x + threadIdx.y * blockDim.x)%warp_size;
     int warpID = (threadIdx.x + threadIdx.y * blockDim.x)/warp_size;
     
-    //clock_block(10,156000);
+    //clock_block(10,706000000);
 
-    while(init[0]==0) clock_block(1,1);
+    while(init[0]==0) clock_block(10,706000000);
 
     if(threadID<numThreads && warpID==0) result[threadID+1] = init[0];
 
