@@ -11,8 +11,13 @@ pthread_t start_IncomingJobsManager(Queue d_newJobs)
 //  manager will need and then launch a thread running
 //  main_IncomingJobsManager(  ), returning that thread
 
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
   pthread_t thread1;
-  pthread_create( &thread1, NULL, main_IncomingJobsManager, (void*) d_newJobs);
+  pthread_create( &thread1, &attr, main_IncomingJobsManager, (void*) d_newJobs);
+  pthread_attr_destroy(&attr);
   return thread1;
 }
 
@@ -29,7 +34,7 @@ void *main_IncomingJobsManager(void *p)
   // Hard code for testing
   int HC_JobType = 0; // hard code the job type for sleeps
   int HC_JobID;
-  void* HC_params;
+  void* HC_params = 0;
   int HC_numThreads = 1;
   int HC_jobs = 1;
 
@@ -51,21 +56,19 @@ void *main_IncomingJobsManager(void *p)
     JobDescription *d_JobDescription;
 
     // cuda Malloc for the structure
-    cudaError_t e1 = cudaMalloc((void **) &d_JobDescription, size);
-    printf("CUDA ERROR in Enqueue cudaMalloc: %s\n", cudaGetErrorString(e1));
+    cudaMalloc((void **) &d_JobDescription, size);
 
     // cuda mem copy
-    cudaError_t e2 = cudaMemcpy(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice); // maybe we can test this later with async
-    printf("CUDA ERROR in Enqueue in cudaMemcpy: %s\n", cudaGetErrorString(e2));
+    cudaMemcpyAsync(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice, stream_dataIn);
+    cudaStreamSynchronize(stream_dataIn);
 
-    printf("Starting Enqueuing job # %d\n", HC_JobID);
+    printf("EnqueueJob # %d\n", HC_JobID);
     // enqueue jobs
     EnqueueJob(d_JobDescription, d_newJobs);
-
-    printf("Finished Enqueuing job # %d\n", HC_JobID);
 
     // free the local memory
     free(h_JobDescription);
   }
+  printf("Incoming Jobs Manager is finished\n");
   return 0;
 }

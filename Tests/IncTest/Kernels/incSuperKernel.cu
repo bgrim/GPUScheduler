@@ -13,7 +13,7 @@ __device__ void clock_block(int kernel_time, int clockRate)
 }
 
 
-__global__ void superKernel(int *init, int numThreads,int *result)
+__global__ void superKernel(volatile int *init, int numThreads, int *result)
 { 
     // init and result are arrays of integers where result should end up
     // being the result of incrementing all elements of init.
@@ -26,13 +26,14 @@ __global__ void superKernel(int *init, int numThreads,int *result)
     
     //clock_block(10,706000000);
 
-    while(init[0]==0) clock_block(10,706000000);
+    int count = 1;
+    while(init[0]==0) count++;
 
-    if(threadID<numThreads && warpID==0) result[threadID+1] = init[0];
+    if(threadID<numThreads && warpID==0) result[threadID+1] = count;
 
     //__syncthreads(); //this will need to be a warp wide sync using (PTX barriers)
 
-    if(threadID==0) result[0] = 7;
+    if(threadID==0) result[0] = count;
 }
 
 

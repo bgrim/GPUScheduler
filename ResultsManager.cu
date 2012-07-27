@@ -11,6 +11,10 @@ pthread_t start_ResultsManager(Queue CompletedJobDescriptions)
 //  need and then launch a thread running main_ResultsManager,
 //  returning this thread
 
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
   pthread_t thread2;
   pthread_create( &thread2, NULL, main_ResultsManager, (void*) CompletedJobDescriptions);
 

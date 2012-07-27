@@ -4,7 +4,7 @@
 
 __device__ JobDescription *executeJob(JobDescription *currentJob);
 
-__global__ void superKernel(Queue incoming, Queue results)
+__global__ void superKernel(volatile Queue incoming, Queue results)
 { 
     // init and result are arrays of integers where result should end up
     // being the result of incrementing all elements of init.
@@ -19,14 +19,10 @@ __global__ void superKernel(Queue incoming, Queue results)
     {
       JobDescription *currentJob;
 
-      if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
+      if(threadID==0) currentJob = FrontJob(incoming);//FrontAndDequeueJob(incoming);
 
-      __syncthreads(); //see below comment
-
-      JobDescription *retval;
-      if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
-
-      __syncthreads(); //this will need to be a warp wide sync using (PTX barriers)
+      JobDescription *retval = currentJob;
+      //if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
 
       if(threadID==0) EnqueueResult(retval, results);
     }
@@ -37,7 +33,7 @@ __device__ JobDescription *executeJob(JobDescription *currentJob){
   int JobType = currentJob->JobType;
 
   int SleepTime = 1;
-  int clockRate = 706000000;
+  int clockRate = 1; //706000000;
 
   // large switch
   switch(JobType){

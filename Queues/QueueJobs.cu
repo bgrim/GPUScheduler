@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-
 struct JobDescription{
   int JobType;
   int JobID;
@@ -21,26 +20,36 @@ typedef QueueRecord *Queue;
 
 
 ////////////////////////////////////////////////////////////
-// Helpers
+// Locking Functions used to Sync warps access to Queues
 ////////////////////////////////////////////////////////////
-__device__ void getLock(Queue Q)
+__device__ void getLock(volatile Queue Q)
 {
   while(atomicCAS(&(Q->ReadLock), 0, 1) != 0);
 }
 
-__device__ void releaseLock(Queue Q)
+__device__ void releaseLock(volatile Queue Q)
 {
   atomicExch(&(Q->ReadLock),0);
 }
 
-__device__ int d_IsEmpty(Queue Q) {
-  return Q->Size == 0;
+///////////////////////////////////////////////////////////
+// Device Helper Functions
+///////////////////////////////////////////////////////////
+
+__device__ int d_IsEmpty(volatile Queue Q) {
+  volatile int s = Q->Size;
+  return s == 0;
 }
 
-__device__ int d_IsFull(Queue Q) {
-  return Q->Size == Q->Capacity;
+__device__ int d_IsFull(volatile Queue Q) {
+  volatile int s = Q->Size;
+  return s == Q->Capacity;
 }
 
+
+//////////////////////////////////////////////////////////
+// Host Helper Functions
+//////////////////////////////////////////////////////////
 int h_IsEmpty(Queue Q) {
   return Q->Size == 0;
 }
@@ -93,74 +102,83 @@ void DisposeQueue(Queue Q) {
 
 void EnqueueJob(JobDescription *X, Queue Q) {
 //called by CPU
-  printf("Start of EnqueueJob\n");
 
-  int copySize= sizeof(struct QueueRecord)-12;
+  int copySize= sizeof(struct QueueRecord);
 
   Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
-  cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataIn);
+  cudaStreamSynchronize(stream_dataIn);
 
-  printf("Middle of EnqueueJob\n");
-
-  while(h_IsFull(h_Q)) cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  while(h_IsFull(h_Q)){
+    cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataIn);
+    cudaStreamSynchronize(stream_dataIn);
+  }
 
   h_Q->Size++;
-  h_Q->Rear = (Q->Rear+1)%(Q->Capacity);
-  h_Q->Array[Q->Rear] = X;
+  h_Q->Rear = (h_Q->Rear+1)%(h_Q->Capacity);
+  cudaMemcpyAsync(h_Q->Array+(h_Q->Rear)*sizeof(JobDescription *), 
+                  &X, 
+                  sizeof(JobDescription *),
+                  cudaMemcpyHostToDevice, 
+                  stream_dataIn);
+  cudaStreamSynchronize(stream_dataIn);
 
-  printf("End of EnqueueJob\n");
-
-  cudaMemcpy(Q, h_Q, copySize, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(Q, h_Q, copySize, cudaMemcpyHostToDevice, stream_dataIn);
+  cudaStreamSynchronize(stream_dataIn);
   free(h_Q);
 }
 
-__device__ JobDescription *FrontJob(Queue Q) {
+__device__ JobDescription *FrontJob(volatile Queue Q) {
 //called by GPU
-  getLock(Q);
+  //getLock(Q);
 
-  while(d_IsEmpty(Q)); //wait for a job
+  int count = 0;
+  while(d_IsEmpty(Q))count++; //wait for a job
 
   JobDescription *result = Q->Array[Q->Front];
-  releaseLock(Q);
+  //releaseLock(Q);
   return result;
 
 }
 
-__device__ void DequeueJob(Queue Q) {
+__device__ void DequeueJob(volatile Queue Q) {
 //called by GPU
   getLock(Q);
 
-  while(d_IsEmpty(Q)); //wait for a job
-  Q->Size--;
+  int count =0;
+  while(d_IsEmpty(Q))count++; //wait for a job
   Q->Front = (Q->Front+1)%(Q->Capacity);
+  Q->Size--;
 
   releaseLock(Q);
 }
 
-__device__ JobDescription *FrontAndDequeueJob(Queue Q) {
+__device__ JobDescription *FrontAndDequeueJob(volatile Queue Q) {
 //called by GPU
   getLock(Q);
 
-  while(d_IsEmpty(Q)); //wait for a job
+  int count=0;
+  while(d_IsEmpty(Q))count++; //wait for a job
 
-  Q->Size--;
   JobDescription *result = Q->Array[Q->Front];
   Q->Front = (Q->Front+1)%(Q->Capacity);
+  Q->Size--;
 
   releaseLock(Q);
 
   return result;
 }
 
-__device__ void EnqueueResult(JobDescription *X, Queue Q) {
+__device__ void EnqueueResult(JobDescription *X, volatile Queue Q) {
 //called by GPU
   getLock(Q);
 
-  while(d_IsFull(Q));
+  int count =0;
+  while(d_IsFull(Q))count++;
 
-  Q->Size++;
   Q->Rear = (Q->Rear+1)%(Q->Capacity);
   Q->Array[Q->Rear] = X;
+  Q->Size++;
 
   releaseLock(Q);
 }
@@ -170,9 +188,13 @@ JobDescription *FrontResult(Queue Q) {
   int copySize= sizeof(struct QueueRecord)-12;
 
   Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
-  cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost,stream_dataOut);
+  cudaStreamSynchronize(stream_dataOut);
 
-  while(h_IsEmpty(h_Q)) cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  while(h_IsEmpty(h_Q)){
+    cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataOut);
+    cudaStreamSynchronize(stream_dataOut);
+  }
 
   return h_Q->Array[h_Q->Front];
 }
@@ -182,30 +204,53 @@ void DequeueResult(Queue Q) {
   int copySize= sizeof(struct QueueRecord)-12; // -12 for 64 bit arch, -8 for others
 
   Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
-  cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataOut);
+  cudaStreamSynchronize(stream_dataOut);
 
-  while(h_IsEmpty(h_Q)) cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  while(h_IsEmpty(h_Q)){
+    cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataOut);
+    cudaStreamSynchronize(stream_dataOut);
+  }
 
   h_Q->Size--;
   h_Q->Front = (h_Q->Front+1)%(h_Q->Capacity);
 
-  cudaMemcpy(Q, h_Q, copySize, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(Q, h_Q, copySize, cudaMemcpyHostToDevice, stream_dataOut);
+  cudaStreamSynchronize(stream_dataOut);
 }
 
 JobDescription *FrontAndDequeueResult(Queue Q) {
 //called by CPU
   int copySize= sizeof(struct QueueRecord)-12;
 
-  Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
-  cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  printf("Begining FrontAndDequeueResults\n");
 
-  while(h_IsEmpty(h_Q)) cudaMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost);
+  Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
+
+  printf("Early FrontAndDequeueResults\n");
+
+  cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataOut);
+  cudaStreamSynchronize(stream_dataOut);
+
+  printf("%d\n", h_Q->Size);
+
+  while(h_IsEmpty(h_Q)){ 
+    cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataOut);
+    cudaStreamSynchronize(stream_dataOut);
+  }
+  printf("Middle FrontAndDequeueResults\n");
 
   h_Q->Size--;
   JobDescription *result = h_Q->Array[h_Q->Front];
   h_Q->Front = (h_Q->Front+1)%(h_Q->Capacity);
 
-  cudaMemcpy(Q, h_Q, copySize, cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(Q, h_Q, copySize, cudaMemcpyHostToDevice, stream_dataOut);
 
-  return result;
+  printf("End FrontAndDequeueResults\n");
+
+  JobDescription *h_result = (JobDescription *) malloc(sizeof(struct JobDescription));
+  cudaMemcpyAsync(h_result, result, sizeof(struct JobDescription), cudaMemcpyDeviceToHost, stream_dataOut);
+  cudaStreamSynchronize(stream_dataOut);
+
+  return h_result;
 }

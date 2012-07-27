@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-__device__ int waitForValue(int *flag);
+//__device__ int waitForValue(int *flag);
 
 __device__ void clock_block(int kernel_time, int clockRate)
 { 
@@ -25,15 +25,16 @@ __global__ void superKernel(int *d_flagIn, int *d_flagOut)
     
     //clock_block(10,1000000);
 
-    int count = waitForValue(d_flagIn);
+    //int count = waitForValue(d_flagIn);
 
-    //while(*d_flagIn==0){ 
-    //  count++; 
-    //}
+    volatile int *temp = (volatile int *)d_flagIn;
+    int count=0;
+    while(*temp==0){ 
+      count++; 
+    }
 
     if(threadID==0) *d_flagOut = count;
 }
-
 
 /*
 __device__ int waitForValue(int *flag){

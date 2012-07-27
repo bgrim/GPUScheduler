@@ -2,6 +2,9 @@
 #include <cuda_runtime.h>
 #include <pthread.h>
 
+cudaStream_t stream_dataIn, stream_dataOut; //this is probably not the best way to make these
+                                            // streams globally known, oh well.
+
 #include "Queues/QueueJobs.cu"
 #include "IncomingJobsManager.cu"
 #include "ResultsManager.cu"
@@ -34,10 +37,9 @@ int main(int argc, char **argv)
                      The Scheduler will Dequeue them and send results to its caller
   */
   cudaStream_t stream_kernel;
-  //cudaStream_t stream_kernel, stream_dataIn, stream_dataOut;
   cudaStreamCreate(&stream_kernel);
-  //cudaStreamCreate(&stream_dataIn);
-  //cudaStreamCreate(&stream_dataOut);
+  cudaStreamCreate(&stream_dataIn);
+  cudaStreamCreate(&stream_dataOut);
 
   Queue d_newJobs = CreateQueue(128); //FIX, make this use stream_dataIn
 
@@ -54,13 +56,13 @@ int main(int argc, char **argv)
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
 //wait for the managers to finish (they should never finish)
-  void ** r;
-  pthread_join(IncomingJobManager, r);
-  pthread_join(ResultsManager, r);
+  void * r;
+  pthread_join(IncomingJobManager, &r);
+  pthread_join(ResultsManager, &r);
 
   cudaStreamDestroy(stream_kernel);
-  //cudaStreamDestroy(stream_DataIn);
-  //cudaStreamDestroy(stream_DataOut);
+  cudaStreamDestroy(stream_dataIn);
+  cudaStreamDestroy(stream_dataOut);
 
   DisposeQueue(d_newJobs);
   DisposeQueue(d_finishedJobs);
