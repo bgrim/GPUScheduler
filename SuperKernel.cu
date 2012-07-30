@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 //#include "Queues/QueueJobs.cu"
 #include "Kernels/Sleep0.cu"
 
@@ -19,7 +20,9 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
     {
       JobDescription *currentJob;
 
-      if(threadID==0) currentJob = FrontJob(incoming);//FrontAndDequeueJob(incoming);
+      if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
+
+      return;
 
       JobDescription *retval = currentJob;
       //if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);

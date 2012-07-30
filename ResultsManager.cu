@@ -36,7 +36,7 @@ void *main_ResultsManager(void *params)
   
   for(i=0;i<HC_jobs;i++){
     // front and dequeue results
-    printf("Starting Dequeuing\n");
+    printf("Starting to dequeue\n");
     currentJob = FrontAndDequeueResult(results);
     printf("Job with ID # %d finished\n", currentJob->JobID);
   }

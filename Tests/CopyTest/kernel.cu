@@ -14,6 +14,9 @@ __device__ void clock_block(int kernel_time, int clockRate)
     }
 }
 
+__device__ int waiting(volatile int *temp){
+  return *temp==0;
+}
 
 __global__ void superKernel(int *d_flagIn, int *d_flagOut)
 { 
@@ -29,7 +32,7 @@ __global__ void superKernel(int *d_flagIn, int *d_flagOut)
 
     volatile int *temp = (volatile int *)d_flagIn;
     int count=0;
-    while(*temp==0){ 
+    while(waiting(temp)){ 
       count++; 
     }
 

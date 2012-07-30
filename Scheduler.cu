@@ -29,10 +29,8 @@ int main(int argc, char **argv)
   /* Notes on these structures:
        Streams: one stream for each direction of data movement and one
                     for the Super Kernel.
-
        QueueJobs: The Scheduler will Enqueue jobDescriptions
                   The Super Kernel will Dequeue and execute them
-
        QueueResults: The Super Kernel will Enqueue jobResults
                      The Scheduler will Dequeue them and send results to its caller
   */
@@ -55,10 +53,14 @@ int main(int argc, char **argv)
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
+  cudaDeviceSynchronize();
+  printf("Kernel ended\n");
 //wait for the managers to finish (they should never finish)
   void * r;
   pthread_join(IncomingJobManager, &r);
   pthread_join(ResultsManager, &r);
+
+  printf("Both managers have finished\n Main is exiting\n");
 
   cudaStreamDestroy(stream_kernel);
   cudaStreamDestroy(stream_dataIn);
