@@ -55,31 +55,20 @@ void *main_IncomingJobsManager(void *p)
     h_JobDescription->params = HC_params;
     h_JobDescription->numThreads = HC_numThreads;
 
-    JobDescription *d_JobDescription;
 
-    // cuda Malloc for the structure
-    cudaMalloc(&d_JobDescription, size);
+    //JobDescription *d_JobDescription;
+    //cudaMalloc((void **)&d_JobDescription, size);
 
     // cuda mem copy
-    cudaMemcpyAsync(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice, stream_dataIn);
-    cudaStreamSynchronize(stream_dataIn);
+    //cudaMemcpyAsync(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice, stream_dataIn);
+    //cudaStreamSynchronize(stream_dataIn);
 
     // enqueue jobs
-    EnqueueJob(d_JobDescription, d_newJobs);
+    EnqueueJob(h_JobDescription, d_newJobs);
     printf("Finished EnqueueJob # %d\n\n", HC_JobID);
 
-
-//test stuff
-    JobDescription *temp = (JobDescription *) malloc(size);
-    cudaMemcpyAsync(temp, d_JobDescription, size, cudaMemcpyDeviceToHost, stream_dataIn);
-    cudaStreamSynchronize(stream_dataIn);
-    printf("ID:   %d\n",temp->JobID);
-    printf("type: %d\n",temp->JobType);
-    printf("numT: %d\n",temp->numThreads);
-
-
     // free the local memory
-    free(h_JobDescription);
+    //    free(&h_JobDescription);
   }
   printf("Finished Incoming Jobs Manager\n");
   return 0;

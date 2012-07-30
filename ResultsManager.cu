@@ -31,20 +31,20 @@ void *main_ResultsManager(void *params)
   printf("Starting ResultsManager\n"); 
   int HC_jobs = 1;
   int i;
-  JobDescription *currentJob;
+  JobDescription currentJob;
   Queue results = (Queue)params;
   
   for(i=0;i<HC_jobs;i++){
     // front and dequeue results
-    //printf("Starting to dequeue\n");
+    printf("Starting to dequeue\n");
     currentJob = FrontAndDequeueResult(results);
 
     printf("\nJob Finsihed:\n");
-    printf("  ID # %d\n", currentJob->JobID);
-    printf("  type %d\n", currentJob->JobType);
-    printf("  numT %d\n\n", currentJob->numThreads);
+    printf("  ID # %d\n", currentJob.JobID);
+    printf("  type %d\n", currentJob.JobType);
+    printf("  numT %d\n\n", currentJob.numThreads);
 
-    cudaFree(currentJob);
+    cudaFree(&currentJob);
   }
   return 0;
 }

@@ -25,8 +25,10 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
 
       if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
 
+      //if(currentJob.numThreads==1025537134)return;
+
       JobDescription retval = currentJob;
-      //if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
+      if(threadID<(currentJob.numThreads)) retval = executeJob(currentJob);
 
       if(threadID==0) EnqueueResult(retval, results);
     }
@@ -34,7 +36,7 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
 
 __device__ JobDescription executeJob(JobDescription currentJob){
 
-  int JobType = currentJob->JobType;
+  int JobType = currentJob.JobType;
 
   int SleepTime = 1;
   int clockRate = 1; //706000000;
