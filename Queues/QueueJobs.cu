@@ -116,10 +116,7 @@ Queue CreateQueue(int MaxElements) {
 }
 
 void DisposeQueue(Queue Q) {
-  if (Q != NULL) {
-    cudaFree(Q->Array);
-    cudaFree(Q);
-  }
+  cudaFree(Q);
 }
 
 ////////////////////////////////////////////////////////////
@@ -267,11 +264,7 @@ JobDescription *FrontAndDequeueResult(Queue Q) {
 //called by CPU
   int copySize= sizeof(struct QueueRecord);
 
-  printf("Begining FrontAndDequeueResults\n");
-
   Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
-
-  printf("Early FrontAndDequeueResults\n");
 
   cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataOut);
   cudaStreamSynchronize(stream_dataOut);
@@ -294,15 +287,12 @@ JobDescription *FrontAndDequeueResult(Queue Q) {
     printf("  Size,     %d\n", h_Q->Size);
     printf("  Front,    %d\n", h_Q->Front);
   }
-  printf("Middle FrontAndDequeueResults\n");
 
   h_Q->Size--;
-  JobDescription *result = h_Q->Array[h_Q->Front];
+  JobDescription *result = (JobDescription *)h_Q->Array + (h_Q->Front)*sizeof(JobDescription *);
   h_Q->Front = (h_Q->Front+1)%(h_Q->Capacity);
 
   cudaMemcpyAsync(Q, h_Q, copySize, cudaMemcpyHostToDevice, stream_dataOut);
-
-  printf("End FrontAndDequeueResults\n");
 
   JobDescription *h_result = (JobDescription *) malloc(sizeof(struct JobDescription));
   cudaMemcpyAsync(h_result, result, sizeof(struct JobDescription), cudaMemcpyDeviceToHost, stream_dataOut);

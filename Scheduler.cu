@@ -59,14 +59,18 @@ int main(int argc, char **argv)
   pthread_join(IncomingJobManager, &r);
   pthread_join(ResultsManager, &r);
 
-  printf("Both managers have finished\n Main is exiting\n");
-
+  printf("Both managers have finished\n");
+  printf("Destroying Streams...\n");
   cudaStreamDestroy(stream_kernel);
   cudaStreamDestroy(stream_dataIn);
   cudaStreamDestroy(stream_dataOut);
 
+  printf("Destorying Queues...\n");
+
   DisposeQueue(d_newJobs);
   DisposeQueue(d_finishedJobs);
+
+  printf("Exiting Main\n");
 
   return 0;    
 }
