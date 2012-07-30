@@ -26,7 +26,7 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
       if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
 
       JobDescription *retval = currentJob;
-      if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
+      //if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
 
       if(threadID==0) EnqueueResult(retval, results);
     }
