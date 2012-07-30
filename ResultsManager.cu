@@ -28,7 +28,7 @@ void *main_ResultsManager(void *params)
 //  print something about them to the screen.
 //    --eventually this should return the result to the application
 //      that requested the work.
-  printf("ResultsManager has started\n"); 
+  printf("Starting ResultsManager\n"); 
   int HC_jobs = 1;
   int i;
   JobDescription *currentJob;
@@ -36,7 +36,7 @@ void *main_ResultsManager(void *params)
   
   for(i=0;i<HC_jobs;i++){
     // front and dequeue results
-    printf("Starting to dequeue\n");
+    //printf("Starting to dequeue\n");
     currentJob = FrontAndDequeueResult(results);
     printf("Job with ID # %d finished\n", currentJob->JobID);
   }

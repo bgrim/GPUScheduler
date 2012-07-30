@@ -40,8 +40,6 @@ void *main_IncomingJobsManager(void *p)
 
   int size = sizeof(struct JobDescription);
 
-  printf("Starting IncomingJobs Manager\n");
-
   int i;
   for(i=0;i<HC_jobs;i++){
     HC_JobID = i;
@@ -58,20 +56,16 @@ void *main_IncomingJobsManager(void *p)
     JobDescription *d_JobDescription;
 
     // cuda Malloc for the structure
-    cudaMalloc(&d_JobDescription, size);
-
-    printf("Starting To Copy Job Description...\n");
+    cudaMalloc((void **) &d_JobDescription, size);
 
     // cuda mem copy
     cudaMemcpyAsync(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice, stream_dataIn);
     cudaStreamSynchronize(stream_dataIn);
 
     printf("Started EnqueueJob # %d\n", HC_JobID);
-
     // enqueue jobs
     EnqueueJob(d_JobDescription, d_newJobs);
     printf("Finished EnqueueJob # %d\n", HC_JobID);
-
     // free the local memory
     free(h_JobDescription);
   }

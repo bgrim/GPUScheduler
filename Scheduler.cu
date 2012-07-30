@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
-  cudaDeviceSynchronize();
+  cudaStreamSynchronize(stream_kernel);
   printf("Kernel ended\n");
 //wait for the managers to finish (they should never finish)
   void * r;
