@@ -156,8 +156,8 @@ void EnqueueJob(JobDescription *X, Queue Q) {
                   sizeof(JobDescription *),
                   cudaMemcpyHostToDevice, 
                   stream_dataIn);
-
   cudaStreamSynchronize(stream_dataIn);
+
 
 //printf("End of EnqueueJob\n");
 

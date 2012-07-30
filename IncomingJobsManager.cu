@@ -68,6 +68,16 @@ void *main_IncomingJobsManager(void *p)
     EnqueueJob(d_JobDescription, d_newJobs);
     printf("Finished EnqueueJob # %d\n\n", HC_JobID);
 
+
+//test stuff
+    JobDescription *temp = (JobDescription *) malloc(size);
+    cudaMemcpyAsync(temp, d_JobDescription, size, cudaMemcpyDeviceToHost, stream_dataIn);
+    cudaStreamSynchronize(stream_dataIn);
+    printf("ID:   %d\n",temp->JobID);
+    printf("type: %d\n",temp->JobType);
+    printf("numT: %d\n",temp->numThreads);
+
+
     // free the local memory
     free(h_JobDescription);
   }

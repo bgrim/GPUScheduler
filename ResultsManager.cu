@@ -38,9 +38,13 @@ void *main_ResultsManager(void *params)
     // front and dequeue results
     //printf("Starting to dequeue\n");
     currentJob = FrontAndDequeueResult(results);
+
     printf("\nJob Finsihed:\n");
     printf("  ID # %d\n", currentJob->JobID);
-    printf("  type %d\n\n", currentJob->JobType);
+    printf("  type %d\n", currentJob->JobType);
+    printf("  numT %d\n\n", currentJob->numThreads);
+
+    cudaFree(currentJob);
   }
   return 0;
 }
