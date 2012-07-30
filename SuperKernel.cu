@@ -3,7 +3,7 @@
 //#include "Queues/QueueJobs.cu"
 #include "Kernels/Sleep0.cu"
 
-__device__ JobDescription *executeJob(JobDescription *currentJob);
+__device__ JobDescription executeJob(JobDescription currentJob);
 
 __global__ void superKernel(volatile Queue incoming, Queue results)
 { 
@@ -21,18 +21,18 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
 
     for(i=0;i<numJobs;i++)
     {
-      JobDescription *currentJob;
+      JobDescription currentJob;
 
       if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
 
-      JobDescription *retval = currentJob;
+      JobDescription retval = currentJob;
       //if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
 
       if(threadID==0) EnqueueResult(retval, results);
     }
 }
 
-__device__ JobDescription *executeJob(JobDescription *currentJob){
+__device__ JobDescription executeJob(JobDescription currentJob){
 
   int JobType = currentJob->JobType;
 
