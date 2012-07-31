@@ -16,7 +16,7 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
     int threadID = threadIdx.x % warp_size;
     //int warpID = threadIdx.x / warp_size;   //added depenency on block
 
-    int numJobs = 16;
+    int numJobs = 8;
     int i;
 
     for(i=0;i<numJobs;i++)
@@ -38,8 +38,8 @@ __device__ JobDescription executeJob(JobDescription currentJob){
 
   int JobType = currentJob.JobType;
 
-  int SleepTime = 1;
-  int clockRate = 1; //706000000;
+  int SleepTime = 1000;
+  int clockRate = 1560000;
 
   // large switch
   switch(JobType){

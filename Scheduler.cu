@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 //Define constants
   int warp_size = 32;
 
-  int warps = 1;   //possible input arguements
+  int warps = 2;   //possible input arguements
   int blocks = 1;
   
   dim3 threads(warp_size*warps/blocks, 1);
@@ -53,6 +53,10 @@ int main(int argc, char **argv)
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
+
+  //cudaDeviceSynchronize();
+  //printf("Kernel ended\n");
+
 //wait for the managers to finish (they should never finish)
   void * r;
   pthread_join(IncomingJobManager, &r);
@@ -67,6 +71,7 @@ int main(int argc, char **argv)
   printf("Destorying Queues...\n");
 
   DisposeQueue(d_newJobs);
+
   DisposeQueue(d_finishedJobs);
 
   printf("Exiting Main\n");
