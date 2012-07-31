@@ -29,7 +29,7 @@ void *main_ResultsManager(void *params)
 //    --eventually this should return the result to the application
 //      that requested the work.
   printf("Starting ResultsManager\n"); 
-  int HC_jobs = 1;
+  int HC_jobs = 16;
   int i;
   JobDescription currentJob;
   Queue results = (Queue)params;

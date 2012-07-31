@@ -35,10 +35,12 @@ void *main_IncomingJobsManager(void *p)
   int HC_JobType = 0; // hard code the job type for sleeps
   int HC_JobID;
   void* HC_params = 0;
-  int HC_numThreads = 1;
-  int HC_jobs = 1;
+  int HC_numThreads = 32;
+  int HC_jobs = 2;
 
   int size = sizeof(struct JobDescription);
+
+  printf("Starting IncomingJobs Manager\n");
 
   int i;
   for(i=0;i<HC_jobs;i++){
@@ -53,22 +55,21 @@ void *main_IncomingJobsManager(void *p)
     h_JobDescription->params = HC_params;
     h_JobDescription->numThreads = HC_numThreads;
 
-    JobDescription *d_JobDescription;
 
-    // cuda Malloc for the structure
-    cudaMalloc((void **) &d_JobDescription, size);
+    //JobDescription *d_JobDescription;
+    //cudaMalloc((void **)&d_JobDescription, size);
 
     // cuda mem copy
-    cudaMemcpyAsync(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice, stream_dataIn);
-    cudaStreamSynchronize(stream_dataIn);
+    //cudaMemcpyAsync(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice, stream_dataIn);
+    //cudaStreamSynchronize(stream_dataIn);
 
-    printf("Started EnqueueJob # %d\n", HC_JobID);
     // enqueue jobs
-    EnqueueJob(d_JobDescription, d_newJobs);
-    printf("Finished EnqueueJob # %d\n", HC_JobID);
+    EnqueueJob(h_JobDescription, d_newJobs);
+    printf("Finished EnqueueJob # %d\n\n", HC_JobID);
+
     // free the local memory
-    free(h_JobDescription);
+    //    free(&h_JobDescription);
   }
-  printf("Incoming Jobs Manager is finished\n");
+  printf("Finished Incoming Jobs Manager\n");
   return 0;
 }

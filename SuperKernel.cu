@@ -16,7 +16,7 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
     int threadID = threadIdx.x % warp_size;
     //int warpID = threadIdx.x / warp_size;   //added depenency on block
 
-    int numJobs = 1;
+    int numJobs = 16;
     int i;
 
     for(i=0;i<numJobs;i++)

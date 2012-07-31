@@ -3,7 +3,7 @@
 //#include "Queues/QueueJobs.cu"
 #include "Kernels/Sleep0.cu"
 
-__device__ JobDescription *executeJob(JobDescription *currentJob);
+__device__ JobDescription executeJob(JobDescription currentJob);
 
 __global__ void superKernel(volatile Queue incoming, Queue results)
 { 
@@ -16,22 +16,27 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
     int threadID = threadIdx.x % warp_size;
     //int warpID = threadIdx.x / warp_size;   //added depenency on block
 
-    while(true)
+    int numJobs = 2;
+    int i;
+
+    for(i=0;i<numJobs;i++)
     {
-      JobDescription *currentJob;
+      JobDescription currentJob;
 
       if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
 
-      JobDescription *retval = currentJob;
-      if(threadID<(currentJob->numThreads)) retval = executeJob(currentJob);
+      //if(currentJob.numThreads==1025537134)return;
+
+      JobDescription retval = currentJob;
+      if(threadID<(currentJob.numThreads)) retval = executeJob(currentJob);
 
       if(threadID==0) EnqueueResult(retval, results);
     }
 }
 
-__device__ JobDescription *executeJob(JobDescription *currentJob){
+__device__ JobDescription executeJob(JobDescription currentJob){
 
-  int JobType = currentJob->JobType;
+  int JobType = currentJob.JobType;
 
   int SleepTime = 1;
   int clockRate = 1; //706000000;

@@ -36,7 +36,7 @@ void *main_IncomingJobsManager(void *p)
   int HC_JobID;
   void* HC_params = 0;
   int HC_numThreads = 32;
-  int HC_jobs = 1;
+  int HC_jobs = 16;
 
   int size = sizeof(struct JobDescription);
 
