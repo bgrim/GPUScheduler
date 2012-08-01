@@ -4,6 +4,8 @@
 
 cudaStream_t stream_dataIn, stream_dataOut; //this is probably not the best way to make these
                                             // streams globally known, oh well.
+int SLEEP_TIME;
+int NUMBER_OF_JOBS;
 
 #include "Queues/QueueJobs.cu"
 #include "IncomingJobsManager.cu"
@@ -19,10 +21,18 @@ int main(int argc, char **argv)
 //Define constants
   int warp_size = 32;
 
-  int warps = 2;   //possible input arguements
-  int blocks = 1;
+  int warps = 32;   //possible input arguements
+  int blocks = 7;
+  NUMBER_OF_JOBS = 224;
+  SLEEP_TIME = 1000;
+  if(argc>4){
+    warps = atoi(argv[1]);
+    blocks = atoi(argv[2]);
+    NUMBER_OF_JOBS = atoi(argv[3]);
+    SLEEP_TIME = atoi(argv[4]);
+  }
   
-  dim3 threads(warp_size*warps/blocks, 1);
+  dim3 threads(warp_size*warps, 1);
   dim3 grid(blocks, 1);
 
 //Allocate streams, Queues
@@ -39,9 +49,9 @@ int main(int argc, char **argv)
   cudaStreamCreate(&stream_dataIn);
   cudaStreamCreate(&stream_dataOut);
 
-  Queue d_newJobs = CreateQueue(128); //FIX, make this use stream_dataIn
+  Queue d_newJobs = CreateQueue(25600); //FIX, make this use stream_dataIn
 
-  Queue d_finishedJobs = CreateQueue(128); //FIX, make this use stream_dataOut
+  Queue d_finishedJobs = CreateQueue(25600); //FIX, make this use stream_dataOut
 
 
 //Launch the super kernel
@@ -74,8 +84,7 @@ int main(int argc, char **argv)
 
   DisposeQueue(d_finishedJobs);
 
-  printf("Exiting Main\n");
-
+  printf("Exiting Main\n\n");
 
   return 0;    
 }

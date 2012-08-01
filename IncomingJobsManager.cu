@@ -22,6 +22,14 @@ pthread_t start_IncomingJobsManager(Queue d_newJobs)
 }
 
 
+void *moveToCuda(void *val, int size){
+  void *ret;
+  cudaMalloc(&ret, size);
+  cudaMemcpyAsync(ret, val, size, cudaMemcpyHostToDevice, stream_dataIn);
+  cudaStreamSynchronize(stream_dataIn);
+  return ret;
+}
+
 void *main_IncomingJobsManager(void *p)
 {
 //The thread should get job descriptions some how and Enqueue them
@@ -34,9 +42,8 @@ void *main_IncomingJobsManager(void *p)
   // Hard code for testing
   int HC_JobType = 0; // hard code the job type for sleeps
   int HC_JobID;
-  void* HC_params = 0;
   int HC_numThreads = 32;
-  int HC_jobs = 16;
+  int HC_jobs = NUMBER_OF_JOBS;
 
   int size = sizeof(struct JobDescription);
 
@@ -45,6 +52,7 @@ void *main_IncomingJobsManager(void *p)
   int i;
   for(i=0;i<HC_jobs;i++){
     HC_JobID = i;
+    HC_JobType = (HC_JobType+1)%2;
     // launch queue jobs
     // malloc the host structure
     JobDescription *h_JobDescription = (JobDescription *) malloc(size);
@@ -52,23 +60,16 @@ void *main_IncomingJobsManager(void *p)
     // set the values to the host structure
     h_JobDescription->JobType = HC_JobType;
     h_JobDescription->JobID = HC_JobID;
-    h_JobDescription->params = HC_params;
+    h_JobDescription->params = moveToCuda(&SLEEP_TIME, sizeof(int));
     h_JobDescription->numThreads = HC_numThreads;
 
-
-    //JobDescription *d_JobDescription;
-    //cudaMalloc((void **)&d_JobDescription, size);
-
-    // cuda mem copy
-    //cudaMemcpyAsync(d_JobDescription, h_JobDescription, size, cudaMemcpyHostToDevice, stream_dataIn);
-    //cudaStreamSynchronize(stream_dataIn);
-
     // enqueue jobs
+//    printf("Starting EnqueueJob # %d\n", HC_JobID);
     EnqueueJob(h_JobDescription, d_newJobs);
-    printf("Finished EnqueueJob # %d\n\n", HC_JobID);
+//    printf("Finished EnqueueJob # %d\n", HC_JobID);
 
     // free the local memory
-    //    free(&h_JobDescription);
+    free(h_JobDescription);
   }
   printf("Finished Incoming Jobs Manager\n");
   return 0;

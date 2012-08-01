@@ -29,21 +29,21 @@ void *main_ResultsManager(void *params)
 //    --eventually this should return the result to the application
 //      that requested the work.
   printf("Starting ResultsManager\n"); 
-  int HC_jobs = 16;
+  int HC_jobs = NUMBER_OF_JOBS;
   int i;
   JobDescription currentJob;
   Queue results = (Queue)params;
   
   for(i=0;i<HC_jobs;i++){
     // front and dequeue results
-    printf("Starting to dequeue\n");
+//    printf("Starting to dequeue\n");
     currentJob = FrontAndDequeueResult(results);
-
+/*
     printf("\nJob Finsihed:\n");
     printf("  ID # %d\n", currentJob.JobID);
     printf("  type %d\n", currentJob.JobType);
     printf("  numT %d\n\n", currentJob.numThreads);
-
+*/
     cudaFree(&currentJob);
   }
   return 0;
