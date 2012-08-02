@@ -3,6 +3,7 @@
 //#include "Queues/QueueJobs.cu"
 #include "Kernels/Sleep0.cu"
 #include "Kernels/Sleep1.cu"
+#include "Kernels/AddSleep.cu"
 
 __device__ JobDescription executeJob(JobDescription currentJob);
 
@@ -51,6 +52,9 @@ __device__ JobDescription executeJob(JobDescription currentJob){
       break;
     case 1:
       sleep1(currentJob.params, clockRate);
+      break;
+    case 2:
+      addSleep(currentJob.params);
       break;
   }
   return currentJob;

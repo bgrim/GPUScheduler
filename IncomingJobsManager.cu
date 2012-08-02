@@ -51,7 +51,7 @@ void *main_IncomingJobsManager(void *p)
   Queue d_newJobs = (Queue) p;
 
   // Hard code for testing
-  int HC_JobType = 0; // hard code the job type for sleeps
+  int HC_JobType = 2; // hard code the job type for sleeps
   int HC_JobID;
   int HC_numThreads = 32;
   int HC_jobs = NUMBER_OF_JOBS;
@@ -63,7 +63,7 @@ void *main_IncomingJobsManager(void *p)
   int i;
   for(i=0;i<HC_jobs;i++){
     HC_JobID = i;
-    HC_JobType = (HC_JobType+1)%2;
+//    HC_JobType = (HC_JobType+1)%2;
     // launch queue jobs
     // malloc the host structure
     JobDescription *h_JobDescription = (JobDescription *) malloc(size);
