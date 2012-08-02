@@ -75,12 +75,12 @@ void *main_IncomingJobsManager(void *p)
   Queue d_newJobs = (Queue) p;
 
   // Hard code for testing
-  int HC_JobType = 3; // hard code the job type for sleeps
+  int HC_JobType = 2; // hard code the job type for sleeps
   int HC_JobID;
   int HC_numThreads = 32;
   int HC_jobs = NUMBER_OF_JOBS;
-  int HC_matrixWidth = 32;
-  int HC_matrixSize = HC_matrixWidth * HC_matrixWidth;
+  //  int HC_matrixWidth = 32;
+  //int HC_matrixSize = HC_matrixWidth * HC_matrixWidth;
 
   int size = sizeof(struct JobDescription);
 
@@ -97,7 +97,9 @@ void *main_IncomingJobsManager(void *p)
     // set the values to the host structure
     h_JobDescription->JobType = HC_JobType;
     h_JobDescription->JobID = HC_JobID;
-    h_JobDescription->params = moveToCuda(makeMatrix(), (2 * sizeof(float) * HC_matrixSize)); // working on float matrix
+
+    h_JobDescription->params = moveToCuda(&SLEEP_TIME, sizeof(int)); //Add Sleep
+    //    h_JobDescription->params = moveToCuda(makeMatrix(), (2 * sizeof(float) * HC_matrixSize)); // working on float matrix
     h_JobDescription->numThreads = HC_numThreads;
 
     //printf("Original pointer to %p\n", (int *) h_JobDescription->params);

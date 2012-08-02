@@ -144,6 +144,7 @@ void EnqueueJob(JobDescription *h_JobDescription, Queue Q) {
                     "EnqueueJob, Getting Queue again...");
   }
 
+  // floating point exception from mod capacity if 0 or -n
   h_Q->Rear = (h_Q->Rear+1)%(h_Q->Capacity);
 
   //printf("Middle of EnqueueJob\n");

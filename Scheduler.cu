@@ -64,12 +64,14 @@ int main(int argc, char **argv)
 //Launch a host thread to manage incoming jobs
   pthread_t IncomingJobManager = start_IncomingJobsManager(d_newJobs);
 
+  void * r;
+  pthread_join(IncomingJobManager, &r);
+
+
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
 //wait for the managers to finish (they should never finish)
-  void * r;
-  pthread_join(IncomingJobManager, &r);
   pthread_join(ResultsManager, &r);
 
   printf("Both managers have finished\n");

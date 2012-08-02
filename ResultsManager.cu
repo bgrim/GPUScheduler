@@ -57,12 +57,12 @@ void *main_ResultsManager(void *params)
     //        printf("%f\n",printArray[i]);
     //}
 
-/*
+
     printf("\nJob Finsihed:\n");
     printf("  ID # %d\n", currentJob.JobID);
-    printf("  type %d\n", currentJob.JobType);
-    printf("  numT %d\n\n", currentJob.numThreads);
-*/
+    //printf("  type %d\n", currentJob.JobType);
+    //printf("  numT %d\n\n", currentJob.numThreads);
+
     cudaFree(&currentJob.params);
     //free(&currentJob);
   }

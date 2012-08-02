@@ -22,7 +22,7 @@ __global__ void superKernel(Queue incoming, Queue results)
 
     __shared__ JobDescription currentJobs[32];
 
-    int numJobs = 1;
+    int numJobs = 100;
     int i;
     for(i=0;i<numJobs;i++)
     {
