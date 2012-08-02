@@ -35,12 +35,12 @@ __device__ void releaseLock(volatile Queue Q)
 // Device Helper Functions
 ///////////////////////////////////////////////////////////
 
-__device__ int d_IsEmpty(volatile Queue Q) {
+__device__ int d_IsEmpty(Queue Q) {
   volatile int *s = &(Q->Rear);
   return (*s+1)%Q->Capacity == Q->Front;
 }
 
-__device__ int d_IsFull(volatile Queue Q) {
+__device__ int d_IsFull(Queue Q) {
   volatile int *s = &(Q->Rear);
   return (*s+2)%Q->Capacity == Q->Front;
 }
@@ -118,6 +118,7 @@ Queue CreateQueue(int MaxElements) {
 }
 
 void DisposeQueue(Queue Q) {
+  //FIX, needs to free the array with Queue
   cudaFree(Q);
 }
 
@@ -142,7 +143,7 @@ void EnqueueJob(JobDescription *h_JobDescription, Queue Q) {
   printf("  Front,    %d\n\n", h_Q->Front);
 */
   while(h_IsFull(h_Q)){
-    //printf("Looping\n");
+    pthread_yield();
     cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataIn);
     synchronizeAndPrint(stream_dataIn, "EnqueueJob, Getting Queue again...");
   }
@@ -166,17 +167,9 @@ void EnqueueJob(JobDescription *h_JobDescription, Queue Q) {
   synchronizeAndPrint(stream_dataIn, "EnqueueJob, Updating Queue");
 
   free(h_Q);
-/*
-  cudaMemcpyAsync(h_JobDescription,
-		  h_Q->Array + (h_Q->Rear)*sizeof(JobDescription),
-                  sizeof(JobDescription),
-                  cudaMemcpyDeviceToHost,
-                  stream_dataIn);
-  printf("<><><><><>  Num of threads = %d\n", h_JobDescription->numThreads);
-*/
 }
 
-__device__ JobDescription FrontJob(volatile Queue Q) {
+__device__ JobDescription FrontJob(Queue Q) {
 //called by GPU
   getLock(Q);
 
@@ -189,7 +182,7 @@ __device__ JobDescription FrontJob(volatile Queue Q) {
 
 }
 
-__device__ void DequeueJob(volatile Queue Q) {
+__device__ void DequeueJob(Queue Q) {
 //called by GPU
   getLock(Q);
 
@@ -201,7 +194,7 @@ __device__ void DequeueJob(volatile Queue Q) {
   releaseLock(Q);
 }
 
-__device__ JobDescription FrontAndDequeueJob(volatile Queue Q) {
+__device__ JobDescription FrontAndDequeueJob(Queue Q) {
 //called by GPU
   getLock(Q);
  
@@ -209,22 +202,25 @@ __device__ JobDescription FrontAndDequeueJob(volatile Queue Q) {
   while(d_IsEmpty(Q))count++;
 
   JobDescription result = Q->Array[Q->Front];
-  Q->Front = (Q->Front+1)%(Q->Capacity);
+  volatile int *front = &Q->Front;
+  *front = ((*front)+1)%(Q->Capacity);
+  //Q->Front = (Q->Front+1)%(Q->Capacity);
 
   releaseLock(Q);
 
   return result;
 }
 
-__device__ void EnqueueResult(JobDescription X, volatile Queue Q) {
+__device__ void EnqueueResult(JobDescription X, Queue Q) {
 //called by GPU
   getLock(Q);
 
   int count =0;
   while(d_IsFull(Q))count++;
-
-  Q->Rear = (Q->Rear+1)%(Q->Capacity);
-  Q->Array[Q->Rear] = X;
+  int temp = (Q->Rear+1)%(Q->Capacity); 
+  Q->Array[temp] = X;
+  volatile int *rear = &Q->Rear;
+  *rear = temp;
 
   releaseLock(Q);
 }
@@ -282,9 +278,10 @@ JobDescription FrontAndDequeueResult(Queue Q) {
   printf("  Front,    %d\n", h_Q->Front);
 */
   while(h_IsEmpty(h_Q)){
+    pthread_yield();
     cudaMemcpyAsync(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataOut);
-              //printf("%d\n", h_Q->Size);
-      synchronizeAndPrint(stream_dataOut, "FandDJob, Getting Queue again...");
+    synchronizeAndPrint(stream_dataOut, "FandDJob, Getting Queue again...");
+
 /*
     printf("Queue Values at Dequeue\n");
     printf("  Capacity, %d\n", h_Q->Capacity);

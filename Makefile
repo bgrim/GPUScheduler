@@ -1,4 +1,4 @@
 run:
-	nvcc -g -G -arch=sm_11 Scheduler.cu -o run
+	nvcc -g -G -arch=sm_11 Scheduler.cu -o bin/run
 clean:
-	rm run
+	rm bin/run

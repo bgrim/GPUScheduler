@@ -29,6 +29,7 @@ void *main_ResultsManager(void *params)
 //    --eventually this should return the result to the application
 //      that requested the work.
   printf("Starting ResultsManager\n"); 
+
   int HC_jobs = NUMBER_OF_JOBS;
   int i;
   JobDescription currentJob;

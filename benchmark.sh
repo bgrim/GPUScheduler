@@ -13,7 +13,7 @@ do
 
     for k in {1..6}
     do
-	(/usr/bin/time -f "%e" ./run $warps $blocks $numJobs) 2>> logs/log.txt
+	(/usr/bin/time -f "%e" ./bin/run $warps $blocks $numJobs) 2>> logs/log.txt
 
 	warps=$(($warps+$warps))
         numJobs=$(($warps*$blocks*64))

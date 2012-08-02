@@ -64,9 +64,6 @@ int main(int argc, char **argv)
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
 
-  //cudaDeviceSynchronize();
-  //printf("Kernel ended\n");
-
 //wait for the managers to finish (they should never finish)
   void * r;
   pthread_join(IncomingJobManager, &r);

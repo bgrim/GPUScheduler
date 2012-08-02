@@ -1,6 +1,17 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include <pthread.h>
+#include <sys/time.h>
+
+struct timeval tp;
+
+
+double getTime_usec() {
+    gettimeofday(&tp, NULL);
+    return static_cast<double>(tp.tv_sec) * 1E6
+            + static_cast<double>(tp.tv_usec);
+}
+
 
 //#include "Queues/QueueJobs.cu"
 void *main_IncomingJobsManager(void *p);
@@ -64,9 +75,8 @@ void *main_IncomingJobsManager(void *p)
     h_JobDescription->numThreads = HC_numThreads;
 
     // enqueue jobs
-//    printf("Starting EnqueueJob # %d\n", HC_JobID);
     EnqueueJob(h_JobDescription, d_newJobs);
-//    printf("Finished EnqueueJob # %d\n", HC_JobID);
+//    printf("Finished EnqueueJob # %d", HC_JobID);
 
     // free the local memory
     free(h_JobDescription);

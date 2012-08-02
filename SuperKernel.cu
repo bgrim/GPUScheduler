@@ -6,7 +6,7 @@
 
 __device__ JobDescription executeJob(JobDescription currentJob);
 
-__global__ void superKernel(volatile Queue incoming, Queue results)
+__global__ void superKernel(Queue incoming, Queue results)
 { 
     // init and result are arrays of integers where result should end up
     // being the result of incrementing all elements of init.
@@ -19,6 +19,10 @@ __global__ void superKernel(volatile Queue incoming, Queue results)
 
     int numJobs = 1;
     int i;
+
+    //int clockRate = 1560000;
+    //int sleep = 1000;
+    //sleep0(&sleep, clockRate);
 
     for(i=0;i<numJobs;i++)
     {
