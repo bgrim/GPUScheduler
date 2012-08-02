@@ -4,6 +4,8 @@
 #include "Kernels/Sleep0.cu"
 #include "Kernels/Sleep1.cu"
 #include "Kernels/AddSleep.cu"
+#include "Kernels/MatrixSquare.cu"
+
 
 __device__ JobDescription executeJob(JobDescription currentJob);
 
@@ -55,6 +57,9 @@ __device__ JobDescription executeJob(JobDescription currentJob){
       break;
     case 2:
       addSleep(currentJob.params);
+      break;
+    case 3:
+      matrixSquare(currentJob.params);
       break;
   }
   return currentJob;

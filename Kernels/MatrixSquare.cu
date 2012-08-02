@@ -1,18 +1,22 @@
 #include <stdio.h>
 
-__device__ void addSleep(void *p_us_time)
+__device__ void matrixSquare(void *input)
 { 
-    //This method will sleep for clockRate*kernel_time many clock ticks
-    // which is equivalent to sleeping for kernel_time milliseconds
-    int time = *((int *) p_us_time);
+    float *matrix = (float *) input;
 
-//    float AddPerUs = 10.26188; //Ben
-    float AddPerUs = 9.89996; //Scott
-
-    float adds = time*AddPerUs;
-
-    int temp=0;
-    while(temp<adds){
-       temp++;
+    int thread = threadIdx.x;
+        
+    int matrixWidth = 32;
+    {
+      for (unsigned int i = thread; i < matrixWidth; i=i+32)
+        for (unsigned int j = 0; j < matrixWidth; ++j) {
+	  float sum = 0;
+	  for (unsigned int k = 0; k < matrixWidth; ++k) {
+	    float a = matrix[i * matrixWidth + k];
+	    float b = matrix[k * matrixWidth + j];
+	    sum += a * b;
+	  }
+	  matrix[i * matrixWidth + j + (matrixWidth * matrixWidth)] = sum;
+        }
     }
 }

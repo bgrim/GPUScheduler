@@ -41,6 +41,28 @@ void *moveToCuda(void *val, int size){
   return ret;
 }
 
+float *makeMatrix(){
+  int ROW = 32;
+  int COLUMN = 32;
+
+  int a=0, b=0;
+
+  float *stuff = (float *) malloc(COLUMN * ROW * sizeof(float));
+  for(a=0; a<ROW;a++)
+    {
+      for(b=0; b<COLUMN;b++)
+        {
+	  stuff[a + b * ROW]=((float)rand())/((float) RAND_MAX);
+        }
+    }
+  int i;
+  for(i = 0; i <2048; i=i+32){
+    printf("%f\n",stuff[i]);
+  }
+  return stuff;
+}
+
+
 void *main_IncomingJobsManager(void *p)
 {
 //The thread should get job descriptions some how and Enqueue them
@@ -51,10 +73,12 @@ void *main_IncomingJobsManager(void *p)
   Queue d_newJobs = (Queue) p;
 
   // Hard code for testing
-  int HC_JobType = 2; // hard code the job type for sleeps
+  int HC_JobType = 3; // hard code the job type for sleeps
   int HC_JobID;
   int HC_numThreads = 32;
   int HC_jobs = NUMBER_OF_JOBS;
+  int HC_matrixWidth = 32;
+  int HC_matrixSize = HC_matrixWidth * HC_matrixWidth;
 
   int size = sizeof(struct JobDescription);
 
@@ -71,7 +95,7 @@ void *main_IncomingJobsManager(void *p)
     // set the values to the host structure
     h_JobDescription->JobType = HC_JobType;
     h_JobDescription->JobID = HC_JobID;
-    h_JobDescription->params = moveToCuda(&SLEEP_TIME, sizeof(int));
+    h_JobDescription->params = moveToCuda(makeMatrix(), sizeof(float) * HC_matrixSize); // working on float matrix
     h_JobDescription->numThreads = HC_numThreads;
 
     // enqueue jobs

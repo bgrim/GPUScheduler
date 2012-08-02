@@ -39,13 +39,27 @@ void *main_ResultsManager(void *params)
     // front and dequeue results
 //    printf("Starting to dequeue\n");
     currentJob = FrontAndDequeueResult(results);
+
+    //JobDescription *h_matTest = malloc(sizeof(struct JobDescription));
+
+    //cudaMemcpy(h_matTest, &currentJob, (sizeof(struct JobDescription)), cudaMemcpyDeviceToHost);
+
+    float *printArray = (float *)malloc((1024 * sizeof(float)));
+
+    cudaMemcpy(printArray, currentJob.params, (sizeof(struct JobDescription)), cudaMemcpyDeviceToHost);
+
+    //int i;
+    //for(i = 0; i < 2048; i=32+i){
+      //      printf("%f\n",printArray[i]);
+    //}
+
 /*
     printf("\nJob Finsihed:\n");
     printf("  ID # %d\n", currentJob.JobID);
     printf("  type %d\n", currentJob.JobType);
     printf("  numT %d\n\n", currentJob.numThreads);
 */
-    cudaFree(&currentJob);
+    //free(&currentJob);
   }
   return 0;
 }
