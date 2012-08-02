@@ -36,8 +36,9 @@ pthread_t start_IncomingJobsManager(Queue d_newJobs)
 void *moveToCuda(void *val, int size){
   void *ret;
   cudaMalloc(&ret, size);
-  cudaMemcpyAsync(ret, val, size, cudaMemcpyHostToDevice, stream_dataIn);
-  cudaStreamSynchronize(stream_dataIn);
+  cudaSafeMemcpy(ret, val, size, 
+                 cudaMemcpyHostToDevice, stream_dataIn, 
+                 "in moveToCuda of IncomingJobsManager.cu");
   return ret;
 }
 
@@ -47,18 +48,19 @@ float *makeMatrix(){
 
   int a=0, b=0;
 
-  float *stuff = (float *) malloc(COLUMN * ROW * sizeof(float));
+  float *stuff = (float *) malloc(2*(COLUMN * ROW * sizeof(float)));
   for(a=0; a<ROW;a++)
     {
       for(b=0; b<COLUMN;b++)
         {
 	  stuff[a + b * ROW]=((float)rand())/((float) RAND_MAX);
-        }
+	  stuff[a + b * ROW + ROW * COLUMN] = 0.0;
+	}
     }
-  int i;
-  for(i = 0; i <2048; i=i+32){
-    printf("%f\n",stuff[i]);
-  }
+  //int i;
+  //for(i = 0; i <2048; i=i+32){
+  //  printf("%f\n",stuff[i]);
+  //}
   return stuff;
 }
 
@@ -95,12 +97,14 @@ void *main_IncomingJobsManager(void *p)
     // set the values to the host structure
     h_JobDescription->JobType = HC_JobType;
     h_JobDescription->JobID = HC_JobID;
-    h_JobDescription->params = moveToCuda(makeMatrix(), sizeof(float) * HC_matrixSize); // working on float matrix
+    h_JobDescription->params = moveToCuda(makeMatrix(), (2 * sizeof(float) * HC_matrixSize)); // working on float matrix
     h_JobDescription->numThreads = HC_numThreads;
+
+    //printf("Original pointer to %p\n", (int *) h_JobDescription->params);
 
     // enqueue jobs
     EnqueueJob(h_JobDescription, d_newJobs);
-//    printf("Finished EnqueueJob # %d", HC_JobID);
+    printf("Finished EnqueueJob # %d\n", HC_JobID);
 
     // free the local memory
     free(h_JobDescription);

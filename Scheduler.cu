@@ -7,6 +7,8 @@ cudaStream_t stream_dataIn, stream_dataOut; //this is probably not the best way 
 int SLEEP_TIME;
 int NUMBER_OF_JOBS;
 
+pthread_mutex_t memcpyLock;
+#include "DataMovement.cu"
 #include "Queues/QueueJobs.cu"
 #include "IncomingJobsManager.cu"
 #include "ResultsManager.cu"
@@ -19,11 +21,13 @@ int NUMBER_OF_JOBS;
 int main(int argc, char **argv)
 {
 //Define constants
+  pthread_mutex_init(&memcpyLock, NULL);
+
   int warp_size = 32;
 
-  int warps = 32;   //possible input arguements
-  int blocks = 7;
-  NUMBER_OF_JOBS = 224;
+  int warps = 1;   //possible input arguements
+  int blocks = 1;
+  NUMBER_OF_JOBS = 1;
   SLEEP_TIME = 1000;
   if(argc>4){
     warps = atoi(argv[1]);
@@ -32,8 +36,8 @@ int main(int argc, char **argv)
     SLEEP_TIME = atoi(argv[4]);
   }
   
-  dim3 threads(warp_size*warps, 1);
-  dim3 grid(blocks, 1);
+  dim3 threads(warp_size*warps, 1, 1);
+  dim3 grid(blocks, 1, 1);
 
 //Allocate streams, Queues
   /* Notes on these structures:
@@ -62,7 +66,6 @@ int main(int argc, char **argv)
 
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
-
 
 //wait for the managers to finish (they should never finish)
   void * r;

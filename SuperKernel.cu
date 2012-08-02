@@ -18,23 +18,19 @@ __global__ void superKernel(Queue incoming, Queue results)
     int warp_size = 32;
 
     int threadID = threadIdx.x % warp_size;
-    //int warpID = threadIdx.x / warp_size;   //added depenency on block
+    int warpID = threadIdx.x / warp_size;   //added depenency on block
+
+    __shared__ JobDescription currentJobs[32];
 
     int numJobs = 1;
     int i;
-
-    //int clockRate = 1560000;
-    //int sleep = 1000;
-    //sleep0(&sleep, clockRate);
-
     for(i=0;i<numJobs;i++)
     {
-      JobDescription currentJob;
-
-      if(threadID==0) currentJob = FrontAndDequeueJob(incoming);
+      if(threadID==0) currentJobs[warpID] = FrontAndDequeueJob(incoming);
 
       JobDescription retval;
-      if(threadID<(currentJob.numThreads)) retval = executeJob(currentJob);
+      //if(threadID<(currentJob.numThreads)) retval = executeJob(currentJob);
+      retval = executeJob(currentJobs[warpID]);
 
       if(threadID==0) EnqueueResult(retval, results);
     }

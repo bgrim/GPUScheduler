@@ -44,13 +44,17 @@ void *main_ResultsManager(void *params)
 
     //cudaMemcpy(h_matTest, &currentJob, (sizeof(struct JobDescription)), cudaMemcpyDeviceToHost);
 
-    float *printArray = (float *)malloc((1024 * sizeof(float)));
 
-    cudaMemcpy(printArray, currentJob.params, (sizeof(struct JobDescription)), cudaMemcpyDeviceToHost);
+    //printf("point is to %p\n", (int *) currentJob.params);
+    float *printArray = (float *)malloc((2048 * sizeof(float)));
+
+    cudaSafeMemcpy(printArray, currentJob.params, (2048 * sizeof(float)),
+                   cudaMemcpyDeviceToHost, stream_dataOut,
+                   "Copying matrix back to host");
 
     //int i;
-    //for(i = 0; i < 2048; i=32+i){
-      //      printf("%f\n",printArray[i]);
+    //for(i = 0; i < 2048; i=1+i){
+    //        printf("%f\n",printArray[i]);
     //}
 
 /*
@@ -59,6 +63,7 @@ void *main_ResultsManager(void *params)
     printf("  type %d\n", currentJob.JobType);
     printf("  numT %d\n\n", currentJob.numThreads);
 */
+    cudaFree(&currentJob.params);
     //free(&currentJob);
   }
   return 0;
