@@ -301,6 +301,10 @@ JobDescription FrontAndDequeueResult(Queue Q) {
                    sizeof(int), cudaMemcpyHostToDevice, stream_dataOut);
   synchronizeAndPrint(stream_dataOut, "FandDJob, Updating Queue");
 
+  cudaFree(result->params);
+
+  cudaFree(&h_Q->Array[h_Q->Front]);
+
   free(h_Q);
 
   return *result;

@@ -6,8 +6,8 @@ __device__ void addSleep(void *p_us_time)
     // which is equivalent to sleeping for kernel_time milliseconds
     int time = *((int *) p_us_time);
 
-    float AddPerUs = 10.26188; //Ben
-//    float AddPerUs = 1; //Scott
+//    float AddPerUs = 10.26188; //Ben
+    float AddPerUs = 9.89996; //Scott
 
     float adds = time*AddPerUs;
 
