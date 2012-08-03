@@ -9,7 +9,7 @@
 
 __device__ JobDescription executeJob(JobDescription currentJob);
 
-__global__ void superKernel(Queue incoming, Queue results)
+__global__ void superKernel(Queue incoming, Queue results, int numJobsPerWarp)
 { 
     // init and result are arrays of integers where result should end up
     // being the result of incrementing all elements of init.
@@ -22,9 +22,9 @@ __global__ void superKernel(Queue incoming, Queue results)
 
     __shared__ JobDescription currentJobs[32];
 
-    int numJobs = 1000;
+    //    int numJobsPerWarp = 1;
     int i;
-    for(i=0;i<numJobs;i++)
+    for(i=0;i<numJobsPerWarp;i++)
     {
       if(threadID==0) currentJobs[warpID] = FrontAndDequeueJob(incoming);
 
@@ -40,7 +40,7 @@ __device__ JobDescription executeJob(JobDescription currentJob){
 
   int JobType = currentJob.JobType;
 
-  int SleepTime = 5000;
+  //  int SleepTime = 5000;
   int clockRate = 1560000;
 
   // large switch
@@ -52,8 +52,7 @@ __device__ JobDescription executeJob(JobDescription currentJob){
       sleep1(currentJob.params, clockRate);
       break;
     case 2:
-      //addSleep(currentJob.params);
-      addSleep(&SleepTime);
+      addSleep(currentJob.params);
       break;
     case 3:
       matrixSquare(currentJob.params);

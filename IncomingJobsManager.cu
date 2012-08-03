@@ -35,11 +35,11 @@ pthread_t start_IncomingJobsManager(Queue d_newJobs)
 
 void *moveToCuda(void *val, int size){
   void *ret;
-  //cudaError_t e = cudaMalloc(&ret, size);
-  //if(e!=cudaSuccess)printf("CUDA Malloc Error: %s  in  moveToCuda\n", cudaGetErrorString (e));
-  //cudaSafeMemcpy(ret, val, size, 
-  //               cudaMemcpyHostToDevice, stream_dataIn, 
-  //               "in moveToCuda of IncomingJobsManager.cu");
+  cudaError_t e = cudaMalloc(&ret, size);
+  if(e!=cudaSuccess)printf("CUDA Malloc Error: %s  in  moveToCuda\n", cudaGetErrorString (e));
+  cudaSafeMemcpy(ret, val, size, 
+                 cudaMemcpyHostToDevice, stream_dataIn, 
+                 "in moveToCuda of IncomingJobsManager.cu");
   return ret;
 }
 
@@ -83,6 +83,8 @@ void *main_IncomingJobsManager(void *p)
 
   printf("Starting IncomingJobs Manager\n");
 
+  void * d_sleep_time = moveToCuda(&SLEEP_TIME, sizeof(int));
+
   int i;
   for(i=0;i<HC_jobs;i++){
     HC_JobID = i;
@@ -94,13 +96,13 @@ void *main_IncomingJobsManager(void *p)
     h_JobDescription->JobType = HC_JobType;
     h_JobDescription->JobID = HC_JobID;
 
-    h_JobDescription->params = moveToCuda(&SLEEP_TIME, sizeof(int)); //AddSleep
+    h_JobDescription->params = d_sleep_time; //AddSleep
     //h_JobDescription->params = moveToCuda(makeMatrix(), (2 * sizeof(float) * HC_matrixSize)); //Matrix
     h_JobDescription->numThreads = HC_numThreads;
 
     // enqueue jobs
     EnqueueJob(h_JobDescription, d_newJobs);
-    if(HC_JobID%100==0) printf("Finished EnqueueJob # %d\n", HC_JobID);
+    //    if(HC_JobID%100==0) printf("Finished EnqueueJob # %d\n", HC_JobID);
 
     // free the local memory
     free(h_JobDescription);

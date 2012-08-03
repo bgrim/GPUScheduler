@@ -30,12 +30,22 @@ int main(int argc, char **argv)
   int blocks = 1;
   NUMBER_OF_JOBS = 1;
   SLEEP_TIME = 1000;
+  int numJobsPerWarp = 1;
   if(argc>4){
     warps = atoi(argv[1]);
+    printf("warps: %d\n", warps);
     blocks = atoi(argv[2]);
-    NUMBER_OF_JOBS = atoi(argv[3]);
+    printf("blocks: %d\n", blocks);
+    numJobsPerWarp = atoi(argv[3]);
+    printf("n: %d\n", numJobsPerWarp);
     SLEEP_TIME = atoi(argv[4]);
+    printf("s: %d\n", SLEEP_TIME);
   }
+
+  printf("s: %d\n", argc);
+  
+  NUMBER_OF_JOBS = warps * blocks * numJobsPerWarp;
+
   
   dim3 threads(warp_size*warps, 1, 1);
   dim3 grid(blocks, 1, 1);
@@ -60,13 +70,12 @@ int main(int argc, char **argv)
 
 
 
-
-
 //Launch the super kernel
-  superKernel<<< grid, threads, 0, stream_kernel>>>(d_newJobs, d_finishedJobs);
+  superKernel<<< grid, threads, 0, stream_kernel>>>(d_newJobs, d_finishedJobs, numJobsPerWarp);
 
 //Launch a host thread to manage incoming jobs
   pthread_t IncomingJobManager = start_IncomingJobsManager(d_newJobs);
+
 
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
@@ -74,8 +83,8 @@ int main(int argc, char **argv)
 //wait for the managers to finish (they should never finish)
   void * r;
   pthread_join(IncomingJobManager, &r);
-
   pthread_join(ResultsManager, &r);
+
 
   printf("Both managers have finished\n");
   printf("Destroying Streams...\n");
