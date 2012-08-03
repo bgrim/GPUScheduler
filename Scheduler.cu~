@@ -8,7 +8,6 @@ int SLEEP_TIME;
 int NUMBER_OF_JOBS;
 
 pthread_mutex_t memcpyLock;
-
 #include "DataMovement.cu"
 #include "Queues/QueueJobs.cu"
 #include "IncomingJobsManager.cu"
