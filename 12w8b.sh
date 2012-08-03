@@ -9,7 +9,7 @@ for i in {1..9}
 do
     warps=1
     blocks=1
-    numJobs=1
+    numJobs=2
 
     for k in {1..9}
     do

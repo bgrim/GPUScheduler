@@ -9,9 +9,9 @@ for i in {1..9}
 do
     warps=1
     blocks=1
-    numJobs=1
+    numJobs=3
 
-    for k in {1..9}
+    for k in {1..8}
     do
 
 	echo $sleepTime
