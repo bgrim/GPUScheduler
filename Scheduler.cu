@@ -54,9 +54,12 @@ int main(int argc, char **argv)
   cudaStreamCreate(&stream_dataIn);
   cudaStreamCreate(&stream_dataOut);
 
-  Queue d_newJobs = CreateQueue(25600); //FIX, make this use stream_dataIn
+  Queue d_newJobs = CreateQueue(25600);
 
-  Queue d_finishedJobs = CreateQueue(25600); //FIX, make this use stream_dataOut
+  Queue d_finishedJobs = CreateQueue(25600);
+
+
+
 
 
 //Launch the super kernel
@@ -65,14 +68,13 @@ int main(int argc, char **argv)
 //Launch a host thread to manage incoming jobs
   pthread_t IncomingJobManager = start_IncomingJobsManager(d_newJobs);
 
-  void * r;
-  pthread_join(IncomingJobManager, &r);
-
-
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
 
 //wait for the managers to finish (they should never finish)
+  void * r;
+  pthread_join(IncomingJobManager, &r);
+
   pthread_join(ResultsManager, &r);
 
   printf("Both managers have finished\n");
@@ -86,6 +88,8 @@ int main(int argc, char **argv)
   DisposeQueue(d_newJobs);
 
   DisposeQueue(d_finishedJobs);
+
+  pthread_mutex_destroy(&memcpyLock);
 
   printf("Exiting Main\n\n");
 

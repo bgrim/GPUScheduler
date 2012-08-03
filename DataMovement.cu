@@ -12,12 +12,13 @@ void cudaSafeMemcpy(void *destination, void *source, int size, enum cudaMemcpyKi
   //Get Lock
   pthread_mutex_lock(&memcpyLock);
 
+
   //Memcpy
   cudaMemcpyAsync(destination, source, size, direction, stream);
 
-  //Synchronize
-  //Print Errors
+  //Synchronize and Print Errors
   synchronizeAndPrint(stream, errorStatement);
+
 
   //Release Lock
   pthread_mutex_unlock(&memcpyLock);

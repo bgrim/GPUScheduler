@@ -35,11 +35,10 @@ pthread_t start_IncomingJobsManager(Queue d_newJobs)
 
 void *moveToCuda(void *val, int size){
   void *ret;
-  //cudaError_t e = cudaMalloc(&ret, size);
-  //if(e!=cudaSuccess)printf("CUDA Malloc Error: %s  in  moveToCuda\n", cudaGetErrorString (e));
-  //cudaSafeMemcpy(ret, val, size, 
-  //               cudaMemcpyHostToDevice, stream_dataIn, 
-  //               "in moveToCuda of IncomingJobsManager.cu");
+  cudaMalloc(&ret, size);
+  cudaSafeMemcpy(ret, val, size, 
+                 cudaMemcpyHostToDevice, stream_dataIn, 
+                 "in moveToCuda of IncomingJobsManager.cu");
   return ret;
 }
 
@@ -100,7 +99,7 @@ void *main_IncomingJobsManager(void *p)
 
     // enqueue jobs
     EnqueueJob(h_JobDescription, d_newJobs);
-    if(HC_JobID%100==0) printf("Finished EnqueueJob # %d\n", HC_JobID);
+    printf("Finished EnqueueJob # %d\n", HC_JobID);
 
     // free the local memory
     free(h_JobDescription);

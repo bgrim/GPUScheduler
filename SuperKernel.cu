@@ -22,7 +22,7 @@ __global__ void superKernel(Queue incoming, Queue results)
 
     __shared__ JobDescription currentJobs[32];
 
-    int numJobs = 100;
+    int numJobs = 1000;
     int i;
     for(i=0;i<numJobs;i++)
     {
@@ -40,7 +40,7 @@ __device__ JobDescription executeJob(JobDescription currentJob){
 
   int JobType = currentJob.JobType;
 
-  //int SleepTime = 1000;
+  int SleepTime = 5000;
   int clockRate = 1560000;
 
   // large switch
@@ -52,7 +52,8 @@ __device__ JobDescription executeJob(JobDescription currentJob){
       sleep1(currentJob.params, clockRate);
       break;
     case 2:
-      addSleep(currentJob.params);
+      //addSleep(currentJob.params);
+      addSleep(&SleepTime);
       break;
     case 3:
       matrixSquare(currentJob.params);

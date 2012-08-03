@@ -58,8 +58,8 @@ void *main_ResultsManager(void *params)
     //}
 
 
-    printf("\nJob Finsihed:\n");
-    printf("  ID # %d\n", currentJob.JobID);
+    //printf("\nJob Finsihed:\n");
+    //printf("  ID # %d\n", currentJob.JobID);
     //printf("  type %d\n", currentJob.JobType);
     //printf("  numT %d\n\n", currentJob.numThreads);
 
