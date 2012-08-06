@@ -33,17 +33,11 @@ int main(int argc, char **argv)
   int numJobsPerWarp = 1;
   if(argc>4){
     warps = atoi(argv[1]);
-    printf("warps: %d\n", warps);
     blocks = atoi(argv[2]);
-    printf("blocks: %d\n", blocks);
     numJobsPerWarp = atoi(argv[3]);
-    printf("n: %d\n", numJobsPerWarp);
     SLEEP_TIME = atoi(argv[4]);
-    printf("s: %d\n", SLEEP_TIME);
   }
 
-  printf("s: %d\n", argc);
-  
   NUMBER_OF_JOBS = warps * blocks * numJobsPerWarp;
 
   
