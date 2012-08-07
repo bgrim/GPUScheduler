@@ -58,9 +58,12 @@ int main(int argc, char **argv)
   cudaStreamCreate(&stream_dataIn);
   cudaStreamCreate(&stream_dataOut);
 
+/*
   Queue d_newJobs = CreateQueue(25600);
-
   Queue d_finishedJobs = CreateQueue(25600);
+*/
+  Queue d_newJobs = CreateQueue(256000);
+  Queue d_finishedJobs = CreateQueue(256000);
 
 
 
@@ -79,18 +82,18 @@ int main(int argc, char **argv)
   pthread_join(IncomingJobManager, &r);
   pthread_join(ResultsManager, &r);
 
-
   printf("Both managers have finished\n");
-  printf("Destroying Streams...\n");
-  cudaStreamDestroy(stream_kernel);
-  cudaStreamDestroy(stream_dataIn);
-  cudaStreamDestroy(stream_dataOut);
 
   printf("Destorying Queues...\n");
 
   DisposeQueue(d_newJobs);
 
   DisposeQueue(d_finishedJobs);
+
+  printf("Destroying Streams...\n");
+  cudaStreamDestroy(stream_kernel);
+  cudaStreamDestroy(stream_dataIn);
+  cudaStreamDestroy(stream_dataOut);
 
   pthread_mutex_destroy(&memcpyLock);
 

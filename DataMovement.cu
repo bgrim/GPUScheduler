@@ -12,7 +12,6 @@ void cudaSafeMemcpy(void *destination, void *source, int size, enum cudaMemcpyKi
   //Get Lock
   pthread_mutex_lock(&memcpyLock);
 
-
   //Memcpy
   cudaMemcpyAsync(destination, source, size, direction, stream);
 

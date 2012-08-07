@@ -25,16 +25,12 @@ Queue CreateQueue(int MaxElements) {
 }
 
 void DisposeQueue(Queue d_Q) {
-/*
-This code should deallocate the array with the Queue, but it is having
-errors in the Memcpy or copying back bad results. Idk.
   Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
   cudaSafeMemcpy(h_Q, d_Q, sizeof(struct QueueRecord), 
                  cudaMemcpyDeviceToHost, stream_dataIn,
-                 "EnqueueJob, Copying Queue to get array pointer");
+                 "DisposeQueue, Copying Queue to get array pointer");
   cudaFree(h_Q->Array);
   free(h_Q);
-*/
   cudaFree(d_Q);
 }
 
