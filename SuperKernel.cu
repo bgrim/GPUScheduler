@@ -26,11 +26,11 @@ __global__ void superKernel(Queue incoming, Queue results, int numJobsPerWarp)
     int i;
     for(i=0;i<numJobsPerWarp;i++)
     {
-      if(threadID==0) currentJobs[warpID] = FrontAndDequeueJob(incoming);
+      if(threadID==0) FrontAndDequeueJob(incoming, &currentJobs[warpID]);
 
       JobDescription retval;
-      //if(threadID<(currentJob.numThreads)) retval = executeJob(currentJob);
-      retval = executeJob(currentJobs[warpID]);
+      if(threadID<(currentJobs[warpID].numThreads)) retval = executeJob(currentJobs[warpID]);
+      //retval = executeJob(currentJobs[warpID]);
 
       if(threadID==0) EnqueueResult(retval, results);
     }

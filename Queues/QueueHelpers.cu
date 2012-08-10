@@ -36,13 +36,13 @@ __device__ void releaseLock(volatile Queue Q)
 ///////////////////////////////////////////////////////////
 
 __device__ int d_IsEmpty(Queue Q) {
-  volatile int *s = &(Q->Rear);
-  return (*s+1)%Q->Capacity == Q->Front;
+  volatile int *rear = &(Q->Rear);
+  return (*rear+1)%Q->Capacity == Q->Front;
 }
 
 __device__ int d_IsFull(Queue Q) {
-  volatile int *s = &(Q->Rear);
-  return (*s+2)%Q->Capacity == Q->Front;
+  volatile int *front = &(Q->Front);
+  return (Q->Rear+2)%Q->Capacity == *front;
 }
 
 

@@ -62,9 +62,8 @@ int main(int argc, char **argv)
   Queue d_newJobs = CreateQueue(25600);
   Queue d_finishedJobs = CreateQueue(25600);
 */
-  Queue d_newJobs = CreateQueue(256000);
-  Queue d_finishedJobs = CreateQueue(256000);
-
+  Queue d_newJobs = CreateQueue(25600);
+  Queue d_finishedJobs = CreateQueue(25600);
 
 
 //Launch the super kernel
@@ -72,7 +71,6 @@ int main(int argc, char **argv)
 
 //Launch a host thread to manage incoming jobs
   pthread_t IncomingJobManager = start_IncomingJobsManager(d_newJobs);
-
 
 //Launch a host thread to manage results from jobs
   pthread_t ResultsManager = start_ResultsManager(d_finishedJobs);
