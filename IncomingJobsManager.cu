@@ -102,7 +102,7 @@ void *main_IncomingJobsManager(void *p)
 
     // enqueue jobs
     EnqueueJob(h_JobDescription, d_newJobs);
-    //    if(HC_JobID%100==0) printf("Finished EnqueueJob # %d\n", HC_JobID);
+    //printf("Finished EnqueueJob # %d\n", HC_JobID);
 
     // free the local memory
     free(h_JobDescription);

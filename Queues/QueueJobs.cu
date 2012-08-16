@@ -43,8 +43,6 @@ void EnqueueJob(JobDescription *h_JobDescription, Queue Q) {
 
   int copySize= sizeof(struct QueueRecord);
 
-  //printf("Start of EnqueueJob\n");
-
   Queue h_Q = (Queue) malloc(sizeof(struct QueueRecord));
   cudaSafeMemcpy(h_Q, Q, copySize, cudaMemcpyDeviceToHost, stream_dataIn,
                  "EnqueueJob, Getting Queue");
@@ -64,7 +62,7 @@ void EnqueueJob(JobDescription *h_JobDescription, Queue Q) {
   h_Q->Rear = (h_Q->Rear+1)%(h_Q->Capacity);
 
   // set job description
-  cudaSafeMemcpy( h_Q->Array + h_Q->Rear,
+  cudaSafeMemcpy( &h_Q->Array[h_Q->Rear],
                   h_JobDescription, 
                   sizeof(JobDescription),
                   cudaMemcpyHostToDevice, 
@@ -78,7 +76,7 @@ void EnqueueJob(JobDescription *h_JobDescription, Queue Q) {
   free(h_Q);
 }
 
-JobDescription FrontAndDequeueResult(Queue Q) {
+JobDescription *FrontAndDequeueResult(Queue Q) {
 //called by CPU
 
   int copySize= sizeof(struct QueueRecord);
@@ -111,7 +109,7 @@ JobDescription FrontAndDequeueResult(Queue Q) {
                   "FandDJob, Updating Queue");
   free(h_Q);
 
-  return *result;
+  return result;
 }
 
 
@@ -119,23 +117,22 @@ JobDescription FrontAndDequeueResult(Queue Q) {
 // Device Functions to Change Queues
 ////////////////////////////////////////////////////////////
 
-__device__ void FrontAndDequeueJob(volatile Queue Q, JobDescription *Result) {
+__device__ void FrontAndDequeueJob(volatile Queue Q, volatile JobPointer Result) {
 //called by GPU
   getLock(Q);
  
   int count = 0;
   while(d_IsEmpty(Q))count++;
 
-  *Result = Q->Array[Q->Front];
   volatile int *front = &Q->Front;
+  *Result = Q->Array[*front];
+
   *front = (*front+1)%(Q->Capacity);
 
   releaseLock(Q);
-
-  //  return result;
 }
 
-__device__ void EnqueueResult(JobDescription X, volatile Queue Q) {
+__device__ void EnqueueResult(volatile JobPointer X, volatile Queue Q) {
 //called by GPU
   getLock(Q);
 
@@ -143,9 +140,11 @@ __device__ void EnqueueResult(JobDescription X, volatile Queue Q) {
   while(d_IsFull(Q))count++;
 
   volatile int *rear = &Q->Rear;
-  *rear = (*rear + 1)%(Q->Capacity);
+  int temp = (*rear + 1)%(Q->Capacity);
 
-  Q->Array[*rear] = X;
+  Q->Array[temp] = *X;
+
+  *rear = temp;
 
   releaseLock(Q);
 }

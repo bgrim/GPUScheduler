@@ -7,7 +7,7 @@
 #include "Kernels/MatrixSquare.cu"
 
 
-__device__ JobDescription executeJob(JobDescription currentJob);
+__device__ JobDescription *executeJob(JobDescription *currentJob);
 
 __global__ void superKernel(Queue incoming, Queue results, int numJobsPerWarp)
 { 
@@ -28,17 +28,16 @@ __global__ void superKernel(Queue incoming, Queue results, int numJobsPerWarp)
     {
       if(threadID==0) FrontAndDequeueJob(incoming, &currentJobs[warpID]);
 
-      JobDescription retval;
-      if(threadID<(currentJobs[warpID].numThreads)) retval = executeJob(currentJobs[warpID]);
-      //retval = executeJob(currentJobs[warpID]);
+      JobDescription *retval;
+      if(threadID<(currentJobs[warpID].numThreads)) retval = executeJob(&currentJobs[warpID]);
 
       if(threadID==0) EnqueueResult(retval, results);
     }
 }
 
-__device__ JobDescription executeJob(JobDescription currentJob){
+__device__ JobDescription *executeJob(JobDescription *currentJob){
 
-  int JobType = currentJob.JobType;
+  int JobType = currentJob->JobType;
 
   //  int SleepTime = 5000;
   int clockRate = 1560000;
@@ -46,16 +45,16 @@ __device__ JobDescription executeJob(JobDescription currentJob){
   // large switch
   switch(JobType){
     case 0:
-      sleep0(currentJob.params, clockRate);
+      sleep0(currentJob->params, clockRate);
       break;
     case 1:
-      sleep1(currentJob.params, clockRate);
+      sleep1(currentJob->params, clockRate);
       break;
     case 2:
-      addSleep(currentJob.params);
+      addSleep(currentJob->params);
       break;
     case 3:
-      matrixSquare(currentJob.params);
+      matrixSquare(currentJob->params);
       break;
   }
   return currentJob;

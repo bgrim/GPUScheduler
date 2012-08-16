@@ -32,7 +32,7 @@ void *main_ResultsManager(void *params)
 
   int HC_jobs = NUMBER_OF_JOBS;
   int i;
-  JobDescription currentJob;
+  JobDescription *currentJob;
   Queue results = (Queue)params;
   
   for(i=0;i<HC_jobs;i++){
@@ -58,13 +58,10 @@ void *main_ResultsManager(void *params)
     //}
 
 
-    //printf("\nJob Finsihed:\n");
-    //printf("  ID # %d\n", currentJob.JobID);
-    //printf("  type %d\n", currentJob.JobType);
-    //printf("  numT %d\n\n", currentJob.numThreads);
-
-    // cudaFree(&currentJob.params);
-    //free(&currentJob);
+    //printf("Job Finsihed:\n");
+    //printf("  ID # %d\n", currentJob->JobID);
+    //printf("  type %d\n", currentJobp->JobType);
+    //printf("  numT %d\n\n", currentJob->numThreads);
   }
   return 0;
 }

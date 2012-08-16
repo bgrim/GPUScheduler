@@ -6,6 +6,7 @@ struct JobDescription{
   int numThreads;
   void *params;
 };
+typedef JobDescription *JobPointer; //needed to make these volatile
 
 struct QueueRecord {
   JobDescription *Array; //Order matters here, we should improve this later
@@ -35,12 +36,12 @@ __device__ void releaseLock(volatile Queue Q)
 // Device Helper Functions
 ///////////////////////////////////////////////////////////
 
-__device__ int d_IsEmpty(Queue Q) {
+__device__ int d_IsEmpty(volatile Queue Q) {
   volatile int *rear = &(Q->Rear);
   return (*rear+1)%Q->Capacity == Q->Front;
 }
 
-__device__ int d_IsFull(Queue Q) {
+__device__ int d_IsFull(volatile Queue Q) {
   volatile int *front = &(Q->Front);
   return (Q->Rear+2)%Q->Capacity == *front;
 }

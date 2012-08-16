@@ -58,13 +58,14 @@ int main(int argc, char **argv)
   cudaStreamCreate(&stream_dataIn);
   cudaStreamCreate(&stream_dataOut);
 
-/*
-  Queue d_newJobs = CreateQueue(25600);
-  Queue d_finishedJobs = CreateQueue(25600);
-*/
-  Queue d_newJobs = CreateQueue(25600);
-  Queue d_finishedJobs = CreateQueue(25600);
+  
+  Queue d_newJobs = CreateQueue(256000);
+  Queue d_finishedJobs = CreateQueue(256000);
+  
+  //Queue d_newJobs = CreateQueue(10);
+  //Queue d_finishedJobs = CreateQueue(10);
 
+  cudaDeviceSynchronize();
 
 //Launch the super kernel
   superKernel<<< grid, threads, 0, stream_kernel>>>(d_newJobs, d_finishedJobs, numJobsPerWarp);
