@@ -16,7 +16,8 @@ __device__ void matrixSquare(void *input)
            float b = matrix[k * matrixWidth + j];
            sum += a * b;
          }
-         matrix[i * matrixWidth + j + (matrixWidth * matrixWidth)] = sum;
+         matrix[i * matrixWidth + j + 
+         (matrixWidth * matrixWidth)] = sum;
       }
    }
 }
